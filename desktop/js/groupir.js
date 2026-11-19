@@ -52,8 +52,27 @@ function grRefreshEmpty() {
   $('#span_grCount').text($('#div_grStates').children('.gr-state').length)
 }
 
+/* Bandeau de notification de Jeedom : un seul à la fois, retiré automatiquement */
+var grAlertTimer = null
+
+function grHideAlert() {
+  clearTimeout(grAlertTimer)
+  grAlertTimer = null
+  if (typeof jeedomUtils !== 'undefined' && typeof jeedomUtils.hideAlert === 'function') {
+    jeedomUtils.hideAlert()
+  } else if (typeof $.fn.hideAlert === 'function') {
+    $('#div_alert').hideAlert()
+  }
+}
+
+function grShowAlert(_message, _level, _delay) {
+  grHideAlert()
+  $('#div_alert').showAlert({ message: _message, level: _level || 'danger' })
+  grAlertTimer = setTimeout(grHideAlert, _delay || 6000)
+}
+
 function grAlert(_message) {
-  $('#div_alert').showAlert({ message: _message, level: 'danger' })
+  grShowAlert(_message, 'danger')
 }
 
 /* ============================================================
@@ -632,11 +651,12 @@ function grAddMember(_state, _eqLogicId, _member) {
     var test = $('<div class="gr-pick-test">')
     test.append('<select class="grMemberAttr form-control input-sm" data-l1key="operator">' + grOperatorOptions(false) + '</select>')
     test.append('<input class="grMemberAttr form-control input-sm gr-test-value" data-l1key="value" placeholder="{{Valeur}}">')
+    test.append('<span class="gr-match-dot"><i class="fas fa-check"></i></span>')
     row.append(test)
   } else {
     row.append('<div class="gr-steps"><div class="gr-step-add"><a class="btn btn-default btn-xs bt_grAddStep" title="{{Enchaîner une autre commande de cet équipement}}"><i class="fas fa-plus"></i> {{Commande}}</a></div></div>')
   }
-  row.append('<div class="gr-member-remove"><a class="btn btn-default btn-sm bt_grCloneMember" title="{{Cloner cette ligne pour un autre équipement}}"><i class="fas fa-clone"></i></a><a class="btn btn-default btn-sm bt_grRemoveMember" title="{{Retirer cet équipement}}"><i class="fas fa-times"></i></a></div>')
+  row.append('<div class="gr-member-remove"><a class="btn btn-default btn-xs bt_grCloneMember" title="{{Cloner cette ligne pour un autre équipement}}"><i class="fas fa-clone"></i></a><a class="btn btn-default btn-xs bt_grRemoveMember" title="{{Retirer cet équipement}}"><i class="fas fa-times"></i></a></div>')
   _state.find('.gr-members').append(row)
   // Objet de l'équipement enregistré, puis équipement et commande info
   var eq = $.grep(grEqLogicList || [], function (e) { return String(e.id) == _eqLogicId })[0]
@@ -647,6 +667,7 @@ function grAddMember(_state, _eqLogicId, _member) {
     grRowRenderCmds(row, init(_member.info_id))
     row.find('.grMemberAttr[data-l1key=operator]').val(init(_member.operator, '=='))
     row.find('.grMemberAttr[data-l1key=value]').val(init(_member.value))
+    grRefreshMemberMatch(row)
   } else {
     var actions = grMemberActions(_member)
     if (actions.length == 0) {
@@ -671,9 +692,118 @@ function grAddMember(_state, _eqLogicId, _member) {
 /* Info : valeur actuelle en indication */
 function grUpdateMemberHints(_row) {
   var info = _row.find('.grMemberAttr[data-l1key=info_id] option:selected').data('item')
-  _row.find('.grMemberAttr[data-l1key=value]').attr('placeholder', info ? '{{actuel :}} ' + init(info.value) : '{{Valeur}}')
+  grRefreshMemberValue(_row)
   grDetectSubType(_row.closest('.gr-state'))
 }
+
+/* Valeur actuelle en indication dans le champ, et texte en vert si la condition est remplie */
+function grRefreshMemberValue(_row) {
+  var info = _row.find('.grMemberAttr[data-l1key=info_id] option:selected').data('item')
+  _row.find('.grMemberAttr[data-l1key=value]').attr('placeholder', info ? '{{actuel :}} ' + init(info.value) : '{{Valeur}}')
+  grRefreshMemberMatch(_row)
+}
+
+/* ---------- Valeurs actuelles des lignes rafraîchies en direct (onglet Correspondances affiché) ---------- */
+var GR_LIVE_DELAY = 5000
+var grLiveBusy = false
+
+function grLiveRefresh() {
+  if (grLiveBusy || document.hidden || !$('#grouptab').is(':visible')) {
+    return
+  }
+  var ids = []
+  $('#div_grStates .gr-member:not(.gr-scen) .grMemberAttr[data-l1key=info_id]').each(function () {
+    var id = String($(this).val() || '')
+    if (id != '' && ids.indexOf(id) < 0) {
+      ids.push(id)
+    }
+  })
+  if (ids.length == 0) {
+    return
+  }
+  grLiveBusy = true
+  $.ajax({
+    type: 'POST',
+    url: GR_AJAX_URL,
+    data: { action: 'getCmdValues', ids: JSON.stringify(ids) },
+    dataType: 'json',
+    global: false,
+    complete: function () {
+      grLiveBusy = false
+    },
+    success: function (data) {
+      if (data.state != 'ok') return
+      var values = {}
+      $.each(data.result || [], function (i, v) {
+        values[String(v.id)] = v.value
+      })
+      // Cache des équipements (nouvelles lignes) et éléments des listes déjà affichées
+      $.each(grGroupEqCache, function (eqId, eq) {
+        $.each((eq && eq.infos) || [], function (i, info) {
+          if (values.hasOwnProperty(String(info.id))) info.value = values[String(info.id)]
+        })
+      })
+      $('#div_grStates .gr-member:not(.gr-scen)').each(function () {
+        var option = $(this).find('.grMemberAttr[data-l1key=info_id] option:selected')
+        var item = option.data('item')
+        if (item && values.hasOwnProperty(String(item.id)) && String(item.value) !== String(values[String(item.id)])) {
+          item.value = values[String(item.id)]
+          grRefreshMemberValue($(this))
+        }
+      })
+    }
+  })
+}
+
+clearInterval(window.grLiveInterval)
+window.grLiveInterval = setInterval(grLiveRefresh, GR_LIVE_DELAY)
+
+/* Même comparaison que groupir::compare() côté serveur */
+function grIsNum(_value) {
+  var text = $.trim(String(_value))
+  return text !== '' && !isNaN(parseFloat(text)) && isFinite(text)
+}
+
+function grCompare(_left, _operator, _right) {
+  if (grIsNum(_left) && grIsNum(_right)) {
+    _left = parseFloat(_left)
+    _right = parseFloat(_right)
+  } else {
+    _left = $.trim(String(_left)).toLowerCase()
+    _right = $.trim(String(_right)).toLowerCase()
+  }
+  switch (_operator) {
+    case '==': return _left == _right
+    case '!=': return _left != _right
+    case '>': return _left > _right
+    case '>=': return _left >= _right
+    case '<': return _left < _right
+    case '<=': return _left <= _right
+    case 'contains': return String(_left).indexOf(String(_right)) >= 0
+    case 'not_contains': return String(_left).indexOf(String(_right)) < 0
+  }
+  return false
+}
+
+/* Info : coche verte quand la valeur actuelle de la commande remplit la condition */
+function grRefreshMemberMatch(_row) {
+  var field = _row.find('.grMemberAttr[data-l1key=value]')
+  var info = _row.find('.grMemberAttr[data-l1key=info_id] option:selected').data('item')
+  var expected = $.trim(String(field.val() || ''))
+  var match = null
+  // Valeur vide ou référence à une commande (#123#) : non évaluable ici, ni vert ni rouge
+  if (info && expected !== '' && !/^#\d+#$/.test(expected) && init(info.value) !== '') {
+    match = grCompare(info.value, init(_row.find('.grMemberAttr[data-l1key=operator]').val(), '=='), expected)
+  }
+  // Coche verte à droite du champ si la condition est remplie, rien sinon (apparition et disparition en fondu)
+  _row.find('.gr-match-dot').toggleClass('is-match', match === true)
+    .attr('title', match === true ? '{{Condition remplie actuellement}}' : null)
+}
+
+$('#grouptab').off('input.grMatch change.grMatch', '.gr-member:not(.gr-scen) .grMemberAttr[data-l1key=value], .gr-member:not(.gr-scen) .grMemberAttr[data-l1key=operator]')
+  .on('input.grMatch change.grMatch', '.gr-member:not(.gr-scen) .grMemberAttr[data-l1key=value], .gr-member:not(.gr-scen) .grMemberAttr[data-l1key=operator]', function () {
+    grRefreshMemberMatch($(this).closest('.gr-member'))
+  })
 
 /* Action : champ de valeur adapté au sous-type de la commande */
 function grUpdateStepValue(_step, _actionValue) {
@@ -890,7 +1020,7 @@ function grAddScenarioMember(_state, _member) {
   })
   action.append(select)
   row.append(action)
-  row.append('<div class="gr-member-remove"><a class="btn btn-default btn-sm bt_grCloneMember" title="{{Cloner cette ligne pour un autre scénario}}"><i class="fas fa-clone"></i></a><a class="btn btn-default btn-sm bt_grRemoveMember" title="{{Retirer ce scénario}}"><i class="fas fa-times"></i></a></div>')
+  row.append('<div class="gr-member-remove"><a class="btn btn-default btn-xs bt_grCloneMember" title="{{Cloner cette ligne pour un autre scénario}}"><i class="fas fa-clone"></i></a><a class="btn btn-default btn-xs bt_grRemoveMember" title="{{Retirer ce scénario}}"><i class="fas fa-times"></i></a></div>')
   _state.find(isInfo ? '.gr-scens' : '.gr-members').append(row)
   var scenarioId = String(init(_member.scenario_id))
   var sc = $.grep(grScenarioList || [], function (x) { return String(x.id) == scenarioId })[0]
@@ -1213,6 +1343,7 @@ function grApplyTemplate(_row) {
     grRowRenderCmds(_row, grCmdIdByName(eqId, 'info', template.info))
     _row.find('.grMemberAttr[data-l1key=operator]').val(init(template.operator, '=='))
     _row.find('.grMemberAttr[data-l1key=value]').val(init(template.value))
+    grRefreshMemberMatch(_row)
     return
   }
   // Action : les commandes sont déjà retrouvées par leur nom dans grRowRenderCmds
@@ -1302,7 +1433,7 @@ $('#grouptab').off('click', '.bt_grCloneMember').on('click', '.bt_grCloneMember'
 $('#grouptab').off('click', '.bt_grConfigureCmd').on('click', '.bt_grConfigureCmd', function () {
   var cmdId = init($(this).attr('data-cmd_id'))
   if (cmdId == '') {
-    $('#div_alert').showAlert({ message: '{{Enregistrez le groupe pour configurer cette commande.}}', level: 'warning' })
+    grShowAlert('{{Enregistrez le groupe pour configurer cette commande.}}', 'warning')
     return
   }
   grOpenCmdConfigure(cmdId)
@@ -1311,7 +1442,7 @@ $('#grouptab').off('click', '.bt_grConfigureCmd').on('click', '.bt_grConfigureCm
 $('#grouptab').off('click', '.bt_grTestCmd').on('click', '.bt_grTestCmd', function () {
   var cmdId = init($(this).attr('data-cmd_id'))
   if (cmdId == '') {
-    $('#div_alert').showAlert({ message: '{{Enregistrez le groupe pour tester cette commande.}}', level: 'warning' })
+    grShowAlert('{{Enregistrez le groupe pour tester cette commande.}}', 'warning')
     return
   }
   if (typeof jeedom.cmd.test === 'function') {
@@ -1462,9 +1593,128 @@ function grLoadLinkedScenarios(_eqLogicId) {
 }
 
 /* ============================================================
+ * Champs obligatoires : vérifiés au clic sur "Sauvegarder" (avant le core).
+ * S'il en manque : sauvegarde bloquée, champs encadrés, commandes concernées
+ * dépliées et les autres pliées, message avec le nombre de champs manquants
+ * ============================================================ */
+function grMissingFields() {
+  var missing = $()
+  $('#div_grStates').children('.gr-state-info').not('.gr-hide-value').each(function () {
+    $(this).find('.gr-member').not('.gr-scen').find('.grMemberAttr[data-l1key=value]').each(function () {
+      if ($.trim(String($(this).val() || '')) === '') {
+        missing = missing.add(this)
+      }
+    })
+  })
+  return missing
+}
+
+function grValidateBeforeSave() {
+  $('#grouptab .gr-value-missing').removeClass('gr-value-missing')
+  var missing = grMissingFields()
+  if (missing.length == 0) {
+    return true
+  }
+  missing.addClass('gr-value-missing')
+  $('#div_grStates').children('.gr-state').each(function () {
+    grSetCollapsed($(this), $(this).find('.gr-value-missing').length == 0)
+  })
+  // Affiche l'onglet des correspondances et amène le premier champ manquant à l'écran
+  var tab = $('.eqLogic .nav-tabs a[href="#grouptab"]')
+  if (!tab.parent().hasClass('active')) {
+    tab.trigger('click')
+  }
+  setTimeout(function () {
+    var first = missing.first()
+    if (first.length && first[0].scrollIntoView) {
+      first[0].scrollIntoView({ block: 'center', behavior: 'smooth' })
+    }
+    first.trigger('focus')
+  }, 100)
+  var message = (missing.length > 1)
+    ? missing.length + ' {{champs « Valeur attendue » ne sont pas renseignés (encadrés en rouge) : sauvegarde annulée.}}'
+    : '{{1 champ « Valeur attendue » n\'est pas renseigné (encadré en rouge) : sauvegarde annulée.}}'
+  grShowAlert(message, 'danger')
+  return false
+}
+
+// Le cadre disparaît dès que le champ est rempli
+$('#grouptab').off('input.grMissing change.grMissing', '.gr-value-missing').on('input.grMissing change.grMissing', '.gr-value-missing', function () {
+  if ($.trim(String($(this).val() || '')) !== '') {
+    $(this).removeClass('gr-value-missing')
+  }
+})
+
+// Phase de capture sur document : passe avant le gestionnaire du core (clic ou raccourci Ctrl+S)
+if (window.grSaveGuard) {
+  document.removeEventListener('click', window.grSaveGuard, true)
+}
+window.grSaveGuard = function (_event) {
+  var target = (_event.target && _event.target.closest) ? _event.target.closest('.eqLogicAction[data-action="save"]') : null
+  if (!target || !$('#div_grStates').length || !$(target).closest('.eqLogic').length) {
+    return
+  }
+  if (!grValidateBeforeSave()) {
+    _event.preventDefault()
+    _event.stopImmediatePropagation()
+  }
+}
+document.addEventListener('click', window.grSaveGuard, true)
+
+/* ============================================================
+ * Modifications non enregistrées : instantané pris au chargement du groupe,
+ * comparé à l'état courant après chaque saisie, clic ou glisser-déposer
+ * ============================================================ */
+var grSnapshot = null
+var grDirtyTimer = null
+
+function grCurrentState() {
+  var eqLogic = $('.eqLogic').getValues('.eqLogicAttr')[0] || {}
+  if (eqLogic.configuration) {
+    delete eqLogic.configuration.commands
+  }
+  return JSON.stringify({ eqLogic: eqLogic, commands: grCollectStates() })
+}
+
+function grTakeSnapshot() {
+  grSnapshot = grCurrentState()
+  grSetDirty(false)
+}
+
+function grSetDirty(_dirty) {
+  $('.eqLogic .gr-unsaved').toggle(!!_dirty)
+  $('.eqLogic .eqLogicAction[data-action=save]').toggleClass('gr-save-dirty', !!_dirty)
+  // Avertissement du core quand on quitte la page sans sauvegarder
+  if (typeof jeeFrontEnd !== 'undefined') {
+    jeeFrontEnd.modifyWithoutSave = !!_dirty
+  }
+  window.modifyWithoutSave = !!_dirty
+}
+
+function grCheckDirty() {
+  clearTimeout(grDirtyTimer)
+  grDirtyTimer = setTimeout(function () {
+    if (grSnapshot === null || !$('.eqLogic').is(':visible')) {
+      return
+    }
+    grSetDirty(grCurrentState() !== grSnapshot)
+  }, 150)
+}
+
+$('.eqLogic').off('input.grDirty change.grDirty click.grDirty sortupdate.grDirty')
+  .on('input.grDirty change.grDirty click.grDirty sortupdate.grDirty', function (_event) {
+    if ($(_event.target).closest('.eqLogicAction[data-action=save]').length) {
+      return
+    }
+    grCheckDirty()
+  })
+
+/* ============================================================
  * Hooks appelés par le core (plugin.template.js)
  * ============================================================ */
 function printEqLogic(_eqLogic) {
+  grSnapshot = null
+  grSetDirty(false)
   $('#div_grStates').empty()
   grCmdIdsByLogical = {}
   $.each(_eqLogic.cmd || [], function (i, cmd) {
@@ -1496,6 +1746,7 @@ function printEqLogic(_eqLogic) {
       grAddState(commands[i])
     }
     grRefreshEmpty()
+    grTakeSnapshot()
   })
   grRefreshEmpty()
 }

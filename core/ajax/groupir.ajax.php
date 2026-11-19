@@ -62,6 +62,22 @@ try {
         ajax::success($eqLogic->getInfoValues());
     }
 
+    // Valeur actuelle de commandes info (lignes de l'éditeur, rafraîchies en direct)
+    if (init('action') == 'getCmdValues') {
+        $ids = json_decode(init('ids', '[]'), true);
+        $values = array();
+        foreach (is_array($ids) ? array_slice($ids, 0, 500) : array() as $id) {
+            if (!is_numeric($id)) {
+                continue;
+            }
+            $cmd = cmd::byId($id);
+            if (is_object($cmd) && $cmd->getType() == 'info') {
+                $values[] = array('id' => $cmd->getId(), 'value' => $cmd->execCmd());
+            }
+        }
+        ajax::success($values);
+    }
+
     // Liste des scénarios (pour les commandes action du groupe)
     if (init('action') == 'getScenarios') {
         $list = array();

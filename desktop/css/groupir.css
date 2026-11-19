@@ -15,6 +15,25 @@
   --groupir-soft-strong: rgba(127, 127, 127, 0.13);
 }
 
+/* ---------- Modifications non enregistrées ---------- */
+.eqLogic .gr-unsaved {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  margin-right: 8px;
+  padding: 0 10px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+  color: #fff;
+  background: var(--groupir-action);
+}
+.eqLogic .eqLogicAction[data-action=save].gr-save-dirty {
+  background-color: var(--groupir-action) !important;
+  border-color: var(--groupir-action) !important;
+}
+
 /* ---------- Titres de section ---------- */
 .groupir-section {
   display: flex;
@@ -340,12 +359,9 @@ a.groupir-linked-item > i {
 }
 #grouptab .gr-member-remove {
   display: flex;
+  align-items: center;
   gap: 2px;
   justify-self: end;
-}
-#grouptab .gr-member-remove .btn {
-  padding-left: 7px;
-  padding-right: 7px;
 }
 #grouptab .gr-member-remove .bt_grCloneMember:hover,
 #grouptab .gr-state-header .bt_grCloneState:hover {
@@ -353,6 +369,30 @@ a.groupir-linked-item > i {
 }
 #grouptab .gr-member-remove .bt_grRemoveMember:hover {
   color: var(--groupir-ko);
+}
+
+/* Info : condition remplie par la valeur actuelle de la commande */
+#grouptab .gr-match-dot {
+  flex: 0 0 18px;
+  align-self: center;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  font-size: 14px;
+  color: var(--groupir-ok);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+#grouptab .gr-match-dot.is-match {
+  opacity: 1;
+}
+
+/* Info : valeur attendue obligatoire, encadrée en rouge pastel quand une sauvegarde est refusée */
+#grouptab .gr-test-value.gr-value-missing {
+  border: 1px solid rgba(229, 72, 77, 0.55) !important;
+  box-shadow: 0 0 0 2px rgba(229, 72, 77, 0.15) !important;
+  background-color: rgba(229, 72, 77, 0.06) !important;
 }
 
 /* Valeur ramenée dans la plage de la commande */

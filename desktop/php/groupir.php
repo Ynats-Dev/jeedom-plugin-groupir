@@ -56,6 +56,7 @@ $eqLogics = eqLogic::byType($plugin->getId());
 	<!-- Page du groupe -->
 	<div class="col-xs-12 eqLogic" style="display: none;">
 		<div class="input-group pull-right" style="display:inline-flex;">
+			<span class="gr-unsaved" style="display:none;" title="{{Des modifications n'ont pas été sauvegardées}}"><i class="fas fa-exclamation-circle"></i><span class="hidden-xs"> {{Modifications non enregistrées}}</span></span>
 			<span class="input-group-btn">
 				<!-- Les balises <a></a> sont volontairement fermées à la ligne suivante pour éviter les espaces entre les boutons. Ne pas modifier -->
 				<a class="btn btn-sm btn-default eqLogicAction roundedLeft" data-action="configure"><i class="fas fa-cogs"></i><span class="hidden-xs"> {{Configuration avancée}}</span>
