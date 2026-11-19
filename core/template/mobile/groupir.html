@@ -1,0 +1,217 @@
+<div class="eqLogic eqLogic-widget groupir-widget" data-eqType="#eqType#" data-eqLogic_id="#id#" data-eqLogic_uid="#uid#" data-version="#version#" data-translate-category="#translate_category#" data-category="#category#" data-tags="#tags#" style="#style#">
+  <div class="text-center widget-name">
+    <span class="gw-refresh pull-right cursor" data-groupir-cmd="#refresh_id#" title="{{Rafraîchir}}"><i class="fas fa-sync-alt"></i></span>
+    <span class="reportModeVisible">#name_display# <span class="object_name">#object_name#</span></span>
+    <a href="#eqLink#" class="reportModeHidden">#name_display# <span class="object_name">#object_name#</span></a>
+  </div>
+
+  <div class="gw-body">
+    #infos#
+    #colors#
+    #actions#
+    #empty#
+  </div>
+
+  <style>
+    .groupir-widget .gw-body {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      padding: 4px 8px 8px;
+    }
+    .groupir-widget .gw-refresh {
+      margin-right: 6px;
+      opacity: 0.55;
+    }
+    .groupir-widget .gw-refresh:hover {
+      opacity: 1;
+    }
+    .groupir-widget .gw-refresh.is-running i {
+      animation: gw-spin 0.8s linear infinite;
+    }
+    .groupir-widget .gw-infos {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .groupir-widget .gw-info {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      padding: 4px 8px;
+      border-radius: 8px;
+      background: rgba(127, 127, 127, 0.08);
+      font-size: 0.95em;
+    }
+    .groupir-widget .gw-dot {
+      flex: 0 0 9px;
+      height: 9px;
+      border-radius: 50%;
+      background: #8a949e;
+    }
+    .groupir-widget .gw-info-name {
+      flex: 1 1 auto;
+      overflow: hidden;
+      white-space: nowrap;
+      text-overflow: ellipsis;
+      text-align: left;
+      font-weight: 600;
+    }
+    .groupir-widget .gw-info-count {
+      font-size: 0.8em;
+      opacity: 0.6;
+      font-variant-numeric: tabular-nums;
+    }
+    .groupir-widget .gw-pill {
+      min-width: 34px;
+      padding: 0 8px;
+      border-radius: 999px;
+      font-size: 0.85em;
+      font-weight: 700;
+      line-height: 19px;
+      text-align: center;
+      background: rgba(127, 127, 127, 0.15);
+    }
+    .groupir-widget .gw-info.is-ok .gw-dot {
+      background: #2fa84f;
+      box-shadow: 0 0 0 3px rgba(47, 168, 79, 0.22);
+    }
+    .groupir-widget .gw-info.is-ok .gw-pill {
+      color: #2fa84f;
+      background: rgba(47, 168, 79, 0.14);
+    }
+    .groupir-widget .gw-info.is-ko .gw-dot {
+      background: #e5484d;
+      box-shadow: 0 0 0 3px rgba(229, 72, 77, 0.18);
+    }
+    .groupir-widget .gw-info.is-ko .gw-pill {
+      color: #e5484d;
+      background: rgba(229, 72, 77, 0.12);
+    }
+    .groupir-widget .gw-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px;
+      justify-content: center;
+    }
+    .groupir-widget .gw-action {
+      flex: 1 1 auto;
+      max-width: 100%;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      border-radius: 8px !important;
+      border: 1px solid rgba(127, 127, 127, 0.25) !important;
+      background: rgba(127, 127, 127, 0.06) !important;
+      transition: border-color 0.15s ease, background-color 0.15s ease;
+    }
+    .groupir-widget .gw-colors {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 8px;
+      border-radius: 8px;
+      background: rgba(127, 127, 127, 0.08);
+    }
+    .groupir-widget .gw-colors > i {
+      margin-right: 2px;
+      opacity: 0.6;
+    }
+    .groupir-widget .gw-swatch {
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      box-shadow: 0 0 0 1px rgba(127, 127, 127, 0.45);
+    }
+    .groupir-widget .gw-action:hover {
+      border-color: var(--link-color, #039be5) !important;
+    }
+    .groupir-widget .gw-action.is-running {
+      border-color: var(--link-color, #039be5) !important;
+      background: rgba(3, 155, 229, 0.15) !important;
+    }
+    .groupir-widget .gw-empty {
+      padding: 10px;
+      text-align: center;
+      font-style: italic;
+      opacity: 0.6;
+    }
+    @keyframes gw-spin {
+      to { transform: rotate(360deg); }
+    }
+  </style>
+
+  <script>
+    /* Mise à jour en direct des widgets Groupir (événement "groupir::update" envoyé par le serveur) : une seule écoute pour la page */
+    if (!window.groupirWidgetBound) {
+      window.groupirWidgetBound = true
+      var groupirApply = function (_data) {
+        if (!_data || !_data.eqLogic_id) return
+        document.querySelectorAll('.groupir-widget[data-eqLogic_id="' + _data.eqLogic_id + '"]').forEach(function (widget) {
+          (_data.infos || []).forEach(function (info) {
+            var row = widget.querySelector('.gw-info[data-cmd_id="' + info.cmd_id + '"]')
+            if (!row) return
+            row.className = 'gw-info ' + info.status
+            row.title = info.title
+            row.querySelector('.gw-info-count').textContent = info.count
+            row.querySelector('.gw-pill').textContent = (info.value === '') ? '-' : info.value
+          })
+          var colors = _data.colors || []
+          var box = widget.querySelector('.gw-colors')
+          if (colors.length == 0) {
+            if (box) box.remove()
+            return
+          }
+          if (!box) {
+            box = document.createElement('div')
+            box.className = 'gw-colors'
+            var body = widget.querySelector('.gw-body')
+            var infos = widget.querySelector('.gw-infos')
+            if (infos) infos.after(box)
+            else if (body) body.prepend(box)
+            else return
+          }
+          box.innerHTML = '<i class="fas fa-palette"></i>'
+          colors.forEach(function (c) {
+            var swatch = document.createElement('span')
+            swatch.className = 'gw-swatch'
+            swatch.style.background = c.color
+            swatch.title = c.name + ' : ' + c.color
+            box.appendChild(swatch)
+          })
+          var empty = widget.querySelector('.gw-empty')
+          if (empty) empty.remove()
+        })
+      }
+      if (typeof jQuery === 'function') {
+        $('body').on('groupir::update', function (_event, _data) {
+          groupirApply(_data || (_event.originalEvent && _event.originalEvent.detail))
+        })
+      } else {
+        document.body.addEventListener('groupir::update', function (_event) {
+          groupirApply(_event.detail)
+        })
+      }
+    }
+
+    (function () {
+      var widget = document.querySelector('.eqLogic[data-eqLogic_uid="#uid#"]')
+      if (!widget) return
+      widget.querySelectorAll('[data-groupir-cmd]').forEach(function (button) {
+        button.addEventListener('click', function (event) {
+          event.preventDefault()
+          var id = button.getAttribute('data-groupir-cmd')
+          if (!id) return
+          button.classList.add('is-running')
+          jeedom.cmd.execute({
+            id: id,
+            success: function () { button.classList.remove('is-running') },
+            error: function () { button.classList.remove('is-running') }
+          })
+          setTimeout(function () { button.classList.remove('is-running') }, 3000)
+        })
+      })
+    })()
+  </script>
+</div>

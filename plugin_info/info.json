@@ -1,0 +1,40 @@
+{
+	"id": "groupir",
+	"name": "Groupir",
+	"pluginVersion": "1.0.0",
+	"description": {
+		"fr_FR": "Regroupez vos équipements : chaque groupe expose des commandes info (ex. « on » vaut ok si toutes les ampoules sont allumées) et des commandes action (ex. « Allumer » pilote toutes les ampoules).",
+		"en_US": "Group your devices: each group exposes info commands (e.g. \"on\" is ok when all the bulbs are on) and action commands (e.g. \"Turn on\" controls all the bulbs).",
+		"de_DE": "Gruppieren Sie Ihre Geräte: Jede Gruppe stellt Info-Befehle (z. B. „on\" ist ok, wenn alle Lampen eingeschaltet sind) und Aktionsbefehle bereit (z. B. „Einschalten\" steuert alle Lampen).",
+		"es_ES": "Agrupe sus equipos: cada grupo expone comandos info (ej. «on» vale ok si todas las bombillas están encendidas) y comandos acción (ej. «Encender» controla todas las bombillas).",
+		"it_IT": "Raggruppa i tuoi dispositivi: ogni gruppo espone comandi info (es. «on» vale ok se tutte le lampadine sono accese) e comandi azione (es. «Accendi» controlla tutte le lampadine)."
+	},
+	"licence": "AGPL",
+	"author": "Ynats",
+	"require": "4.2",
+	"category": "programming",
+	"hasDependency": false,
+	"hasOwnDeamon": false,
+	"maxDependancyInstallTime": 0,
+	"changelog": "",
+	"documentation": "",
+	"link": {
+		"forum": "https://community.jeedom.com/tag/plugin-groupir"
+	},
+	"language": [
+		"fr_FR",
+		"en_US",
+		"de_DE",
+		"es_ES",
+		"it_IT"
+	],
+	"compatibility": [
+		"smart",
+		"luna",
+		"atlas",
+		"rpi",
+		"docker",
+		"diy",
+		"mobile"
+	]
+}

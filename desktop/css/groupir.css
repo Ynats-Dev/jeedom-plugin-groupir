@@ -1,0 +1,573 @@
+/* Groupir — styles de l'interface d'administration
+ * S'appuie sur les variables CSS du thème Jeedom (clair / sombre) avec des valeurs de repli.
+ */
+
+:root {
+  --groupir-accent: var(--link-color, #039be5);
+  --groupir-info: var(--al-info-color, #3c8dbc);
+  --groupir-action: var(--al-warning-color, #f0a020);
+  --groupir-ok: #2fa84f;
+  --groupir-ko: #e5484d;
+  --groupir-muted: #8a949e;
+  --groupir-radius: 8px;
+  --groupir-border: rgba(127, 127, 127, 0.22);
+  --groupir-soft: rgba(127, 127, 127, 0.07);
+  --groupir-soft-strong: rgba(127, 127, 127, 0.13);
+}
+
+/* ---------- Titres de section ---------- */
+.groupir-section {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 22px 0 14px;
+  padding: 0 0 6px 10px;
+  border-left: 3px solid var(--groupir-accent);
+  border-bottom: 1px solid var(--groupir-border);
+  font-weight: 600;
+  font-size: 1.05em;
+  letter-spacing: 0.01em;
+}
+.groupir-section i {
+  color: var(--groupir-accent);
+}
+.groupir-section--inline {
+  margin: 0;
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+/* ---------- Compteurs, badges, textes secondaires ---------- */
+.groupir-count {
+  display: inline-block;
+  min-width: 22px;
+  margin-left: 6px;
+  padding: 0 7px;
+  border-radius: 999px;
+  background: var(--groupir-soft-strong);
+  font-size: 0.8em;
+  font-weight: 600;
+  line-height: 20px;
+  text-align: center;
+  vertical-align: middle;
+}
+.groupir-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 1px 9px;
+  border-radius: 999px;
+  font-size: 0.85em;
+  font-weight: 600;
+  white-space: nowrap;
+  background: var(--groupir-soft-strong);
+}
+.groupir-badge.is-info {
+  color: var(--groupir-info);
+  background: rgba(60, 141, 188, 0.14);
+}
+.groupir-badge.is-action {
+  color: var(--groupir-action);
+  background: rgba(240, 160, 32, 0.14);
+}
+.groupir-meta {
+  opacity: 0.7;
+  font-size: 0.9em;
+}
+
+/* ---------- Page principale : recherche et vignettes ---------- */
+.groupir-search {
+  margin: 4px 0 12px;
+}
+
+/* ---------- Encadré d'aide ---------- */
+.groupir-callout {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  margin: 10px 0 18px;
+  padding: 12px 14px;
+  border-radius: var(--groupir-radius);
+  border: 1px solid var(--groupir-border);
+  border-left: 3px solid var(--groupir-accent);
+  background: var(--groupir-soft);
+}
+.groupir-callout > i {
+  margin-top: 2px;
+  font-size: 1.3em;
+  color: var(--groupir-accent);
+}
+.groupir-callout p {
+  margin: 0 0 6px;
+}
+.groupir-callout p:last-child {
+  margin-bottom: 0;
+}
+
+/* ---------- Scénarios liés (onglet Général) ---------- */
+.groupir-linked-title {
+  margin: 4px 0 6px;
+  font-weight: 600;
+}
+.groupir-linked-title i {
+  color: var(--groupir-accent);
+  margin-right: 4px;
+}
+.groupir-linked-title + .groupir-linked-list,
+.groupir-linked-title + .groupir-linked-empty {
+  margin-bottom: 14px;
+}
+.groupir-linked-empty {
+  padding: 6px 10px;
+  border: 1px dashed var(--groupir-border);
+  border-radius: 6px;
+}
+.groupir-linked-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+a.groupir-linked-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  border: 1px solid var(--groupir-border);
+  border-left: 3px solid #8e6bd8;
+  border-radius: 6px;
+  background: var(--groupir-soft);
+  color: inherit;
+  text-decoration: none !important;
+  transition: border-color 0.15s ease;
+}
+a.groupir-linked-item:hover {
+  border-color: var(--groupir-accent);
+}
+a.groupir-linked-item.is-inactive {
+  opacity: 0.6;
+}
+.groupir-linked-name {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+a.groupir-linked-item > i {
+  opacity: 0.5;
+  font-size: 0.85em;
+}
+
+/* ---------- État vide ---------- */
+.groupir-empty {
+  padding: 40px 20px;
+  text-align: center;
+  border: 1px dashed var(--groupir-border);
+  border-radius: var(--groupir-radius);
+}
+.groupir-empty > i {
+  display: block;
+  margin-bottom: 10px;
+  font-size: 2.4em;
+  opacity: 0.4;
+}
+
+/* ---------- Onglet Correspondances : barre d'outils ---------- */
+.groupir-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  margin: 16px 0 12px;
+}
+.groupir-spacer {
+  flex: 1 1 auto;
+}
+
+/* ---------- Carte d'une commande du groupe ---------- */
+#grouptab .gr-state {
+  margin-bottom: 14px;
+  padding: 12px 14px;
+  border: 1px solid var(--groupir-border);
+  border-left: 3px solid var(--groupir-info);
+  border-radius: var(--groupir-radius);
+  background: var(--groupir-soft);
+}
+#grouptab .gr-state-action {
+  border-left-color: var(--groupir-action);
+}
+#grouptab .gr-state-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+#grouptab .gr-state-header input {
+  flex: 0 1 260px;
+  font-weight: 600;
+}
+#grouptab .gr-state-header .bt_grAddMemberEq {
+  margin-left: auto;
+}
+#grouptab .gr-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 6px;
+  cursor: pointer;
+  color: inherit;
+  opacity: 0.6;
+  text-decoration: none !important;
+}
+#grouptab .gr-toggle:hover {
+  opacity: 1;
+  background: var(--groupir-soft-strong);
+}
+#grouptab .gr-toggle i {
+  transition: transform 0.15s ease;
+}
+#grouptab .gr-state.gr-collapsed .gr-toggle i {
+  transform: rotate(-90deg);
+}
+#grouptab .gr-state.gr-collapsed .gr-state-body {
+  display: none;
+}
+#grouptab .gr-state.gr-collapsed .gr-state-header {
+  margin-bottom: 0;
+}
+
+#grouptab .gr-members-empty {
+  padding: 10px;
+  text-align: center;
+  border: 1px dashed var(--groupir-border);
+  border-radius: 6px;
+  opacity: 0.75;
+}
+#grouptab .gr-members-empty i {
+  margin-right: 4px;
+  opacity: 0.6;
+}
+
+/* Valeurs retournées (info) / note (action) */
+#grouptab .gr-state-values {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid var(--groupir-border);
+}
+#grouptab .gr-state-values-title {
+  font-weight: 600;
+  margin-right: 4px;
+}
+#grouptab .gr-state-values-title i {
+  color: var(--groupir-info);
+}
+#grouptab .gr-state-values label {
+  margin: 0 0 0 6px;
+  font-weight: normal;
+  opacity: 0.75;
+}
+#grouptab .gr-state-values input {
+  width: auto;
+  flex: 0 1 140px;
+}
+
+/* ---------- Lignes : Objet > Équipement > Commande > Valeur (grille compacte) ---------- */
+#grouptab .gr-members-head,
+#grouptab .gr-row.gr-member {
+  display: grid;
+  grid-template-columns: minmax(120px, 1fr) minmax(140px, 1.3fr) minmax(140px, 1.3fr) minmax(200px, 1fr) 64px;
+  gap: 2px 6px;
+  align-items: start;
+}
+#grouptab .gr-members-head {
+  padding: 0 8px 4px 11px;
+  font-size: 0.8em;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  opacity: 0.6;
+}
+#grouptab .gr-row.gr-member {
+  padding: 6px 8px;
+  margin-bottom: 4px;
+  border: 1px solid var(--groupir-border);
+  border-radius: 6px;
+  background: var(--bg-color, transparent);
+  transition: border-color 0.15s ease;
+}
+#grouptab .gr-row.gr-member:hover {
+  border-color: var(--groupir-accent);
+}
+#grouptab .gr-row.gr-member .form-control.input-sm {
+  border-radius: 6px;
+}
+#grouptab .gr-pick {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+#grouptab .gr-pick .gr-filter {
+  height: 22px;
+  padding: 1px 8px;
+  font-size: 0.85em;
+  border-radius: 999px !important;
+  opacity: 0.8;
+}
+#grouptab .gr-pick .gr-filter:focus {
+  opacity: 1;
+}
+#grouptab .gr-pick-test {
+  display: flex;
+  gap: 4px;
+  min-width: 0;
+}
+#grouptab .gr-pick-test select {
+  flex: 0 1 120px;
+  width: auto;
+}
+#grouptab .gr-pick-test .gr-test-value {
+  flex: 1 1 80px;
+  width: auto;
+  min-width: 0;
+}
+#grouptab .gr-member-remove {
+  display: flex;
+  gap: 2px;
+  justify-self: end;
+}
+#grouptab .gr-member-remove .btn {
+  padding-left: 7px;
+  padding-right: 7px;
+}
+#grouptab .gr-member-remove .bt_grCloneMember:hover,
+#grouptab .gr-state-header .bt_grCloneState:hover {
+  color: var(--groupir-accent);
+}
+#grouptab .gr-member-remove .bt_grRemoveMember:hover {
+  color: var(--groupir-ko);
+}
+
+/* Valeur ramenée dans la plage de la commande */
+#grouptab .gr-test-value.gr-value-clamped {
+  border-color: var(--groupir-action) !important;
+  box-shadow: 0 0 0 2px rgba(240, 160, 32, 0.3);
+}
+
+/* Commande action sans aucune valeur à saisir : colonne "Valeur" masquée */
+#grouptab .gr-state.gr-hide-value .gr-members-head,
+#grouptab .gr-state.gr-hide-value .gr-row.gr-member {
+  grid-template-columns: minmax(120px, 1fr) minmax(140px, 1.3fr) minmax(140px, 1.3fr) 64px;
+}
+#grouptab .gr-state.gr-hide-value .gr-members-head span:nth-child(4),
+#grouptab .gr-state.gr-hide-value .gr-pick-test {
+  display: none;
+}
+
+@media (max-width: 991px) {
+  #grouptab .gr-members-head {
+    display: none !important;
+  }
+  #grouptab .gr-row.gr-member,
+  #grouptab .gr-state.gr-hide-value .gr-row.gr-member {
+    grid-template-columns: 1fr 1fr 64px;
+  }
+  #grouptab .gr-state-header .bt_grAddMemberEq {
+    margin-left: 0;
+  }
+}
+
+/* ---------- Commande action : plusieurs actions enchaînées par équipement ---------- */
+#grouptab .gr-state-action .gr-members-head,
+#grouptab .gr-state-action .gr-row.gr-member {
+  grid-template-columns: minmax(120px, 1fr) minmax(140px, 1.3fr) minmax(140px, 1.3fr) minmax(160px, 1fr) 44px 64px;
+}
+#grouptab .gr-state-action.gr-hide-value .gr-members-head,
+#grouptab .gr-state-action.gr-hide-value .gr-row.gr-member {
+  grid-template-columns: minmax(120px, 1fr) minmax(140px, 1.3fr) minmax(140px, 1.3fr) 44px 64px;
+}
+#grouptab .gr-steps {
+  grid-column: 3 / 6;
+  display: grid;
+  grid-template-columns: subgrid;
+  row-gap: 4px;
+  min-width: 0;
+}
+#grouptab .gr-state-action.gr-hide-value .gr-steps {
+  grid-column: 3 / 5;
+}
+#grouptab .gr-step {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: subgrid;
+  align-items: start;
+  min-width: 0;
+}
+#grouptab .gr-step + .gr-step {
+  padding-top: 4px;
+  border-top: 1px dashed var(--groupir-border);
+}
+#grouptab .gr-step-remove {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  justify-self: center;
+  padding-top: 3px;
+}
+#grouptab .gr-step-remove .btn:hover {
+  color: var(--groupir-ko);
+}
+#grouptab .gr-single-step .gr-step-remove {
+  visibility: hidden;
+}
+#grouptab .gr-step-add {
+  grid-column: 1 / -1;
+}
+#grouptab .gr-step-add .btn {
+  opacity: 0.75;
+}
+#grouptab .gr-step-add .btn:hover {
+  opacity: 1;
+  color: var(--groupir-action);
+}
+@supports not (grid-template-columns: subgrid) {
+  #grouptab .gr-steps,
+  #grouptab .gr-step {
+    grid-template-columns: minmax(140px, 1.3fr) minmax(160px, 1fr) 44px;
+  }
+  #grouptab .gr-state-action.gr-hide-value .gr-steps,
+  #grouptab .gr-state-action.gr-hide-value .gr-step {
+    grid-template-columns: 1fr 44px;
+  }
+}
+@media (max-width: 991px) {
+  #grouptab .gr-state-action .gr-row.gr-member,
+  #grouptab .gr-state-action.gr-hide-value .gr-row.gr-member {
+    grid-template-columns: 1fr 1fr 64px;
+  }
+  #grouptab .gr-steps,
+  #grouptab .gr-state-action.gr-hide-value .gr-steps {
+    grid-column: 1 / 3;
+    grid-template-columns: 1fr 1fr 44px;
+  }
+  #grouptab .gr-step {
+    grid-template-columns: 1fr 1fr 44px;
+  }
+  #grouptab .gr-state-action.gr-hide-value .gr-step {
+    grid-template-columns: 1fr 44px;
+  }
+}
+
+/* ---------- Ligne scénario (commande action) ---------- */
+.groupir-badge.is-scenario {
+  color: #8e6bd8;
+  background: rgba(142, 107, 216, 0.14);
+}
+#grouptab .gr-row.gr-scen {
+  border-left: 3px solid #8e6bd8;
+}
+#grouptab .gr-scen-action {
+  grid-column: 3 / 6;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+#grouptab .gr-scen-action select {
+  flex: 0 1 180px;
+  width: auto;
+}
+#grouptab .gr-state-action.gr-hide-value .gr-scen-action {
+  grid-column: 3 / 5;
+}
+@media (max-width: 991px) {
+  #grouptab .gr-scen-action,
+  #grouptab .gr-state-action.gr-hide-value .gr-scen-action {
+    grid-column: 1 / 3;
+  }
+}
+
+#grouptab .gr-state-header .bt_grConfigureCmd.gr-disabled {
+  opacity: 0.45;
+}
+
+/* ---------- Glisser-déposer (commandes, lignes, actions) ---------- */
+#grouptab .gr-drag,
+#grouptab .gr-row-drag,
+#grouptab .gr-step-drag {
+  cursor: grab;
+  opacity: 0.35;
+  padding: 0 2px;
+}
+#grouptab .gr-drag:hover,
+#grouptab .gr-row-drag:hover,
+#grouptab .gr-step-drag:hover {
+  opacity: 0.9;
+}
+#grouptab.gr-no-sort .gr-drag,
+#grouptab.gr-no-sort .gr-row-drag,
+#grouptab.gr-no-sort .gr-step-drag {
+  display: none;
+}
+#grouptab .gr-row.gr-member {
+  position: relative;
+  padding-left: 22px;
+}
+#grouptab .gr-members-head {
+  padding-left: 25px;
+}
+#grouptab .gr-row-drag {
+  position: absolute;
+  left: 5px;
+  top: 10px;
+}
+#grouptab .gr-sort-placeholder {
+  margin-bottom: 4px;
+  border: 1px dashed var(--groupir-accent);
+  border-radius: 6px;
+  background: var(--groupir-soft);
+  visibility: visible !important;
+}
+#grouptab .gr-state.ui-sortable-helper,
+#grouptab .gr-member.ui-sortable-helper {
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.25);
+}
+
+/* ---------- Lignes cassées (élément supprimé) ---------- */
+#grouptab .gr-row.gr-member.gr-broken {
+  border-color: var(--groupir-ko);
+  background: rgba(229, 72, 77, 0.07);
+}
+#grouptab .gr-broken-msg {
+  grid-column: 1 / -1;
+  color: var(--groupir-ko);
+  font-size: 0.88em;
+}
+#grouptab .gr-step-broken .grStepAttr[data-l1key=action_id] {
+  border-color: var(--groupir-ko) !important;
+}
+
+/* ---------- Règle (info) et pause (action) ---------- */
+#grouptab .gr-state-values select.gr-rule {
+  width: auto;
+  flex: 0 1 220px;
+}
+#grouptab .gr-state-values input.gr-rule-count {
+  flex: 0 0 70px;
+}
+#grouptab .gr-state-values input.gr-pause {
+  flex: 0 0 80px;
+}
+#grouptab .gr-pause-help {
+  flex: 1 1 100%;
+}
+#grouptab .gr-state-info .gr-scen-action {
+  grid-column: 3 / 5;
+}
