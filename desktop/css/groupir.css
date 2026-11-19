@@ -635,7 +635,10 @@ a.groupir-linked-item > i {
   flex: 0 0 auto;
 }
 #grouptab .gr-state-values .gr-stale-check input[type=checkbox] {
-  position: static;
+  /* relative (et non static) : la coche du thème Jeedom est positionnée par rapport à la case */
+  position: relative;
+  top: 0;
+  left: 0;
   flex: 0 0 auto;
   width: auto;
   margin: 0;

@@ -71,7 +71,7 @@ Il **tipo** del comando si sceglie come in Jeedom, e le opzioni proposte dipendo
 
 - **Binario**: il comando vale `1` se la regola è rispettata, altrimenti `0` (compatibile con i widget e i tipi generici binari);
 - **Numerico**: il comando calcola un valore a partire dalle righe:
-  - **Media**, **Più alto**, **Più basso**, **Somma** o **Mediana** dei valori dei comandi info (es. temperatura media delle stanze), con il numero di **decimali** scelto. La condizione e il valore atteso delle righe non sono usati; uno scenario conta `1` se è nello stato scelto, `0` altrimenti. L'unità della prima info (es. `°C`) viene ripresa automaticamente;
+  - **Media**, **Più alto**, **Più basso**, **Somma** o **Mediana** dei valori dei comandi info (es. temperatura media delle stanze), con il numero di **decimali** scelto. La condizione e il valore atteso delle righe non sono usati; uno scenario conta `1` se è nello stato scelto, `0` altrimenti. L'unità della prima info (es. `°C`) viene ripresa automaticamente e segue le info scelte (es. `%` se passate all'umidità); un'unità inserita a mano nella configurazione del comando viene mantenuta;
   - **Numero di corrispondenze**: numero di righe che rispettano la loro condizione (es. numero di finestre aperte);
   - **Secondo la regola (allora / altrimenti)**: come Altro, con valori numerici (predefinito `1` / `0`);
 - **Altro**: testo libero, il comando assume il valore **alors** (predefinito `on`) se la regola è rispettata, altrimenti il valore **sinon** (predefinito `off`).

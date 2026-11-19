@@ -71,7 +71,7 @@ The command **type** is chosen as in Jeedom, and the available options depend on
 
 - **Binary**: the command is `1` if the rule is met, otherwise `0` (works with binary widgets and generic types);
 - **Numeric**: the command computes a value from the lines:
-  - **Average**, **Highest**, **Lowest**, **Sum** or **Median** of the info command values (e.g. average room temperature), with the chosen number of **decimals**. The condition and expected value of the lines are not used; a scenario counts as `1` if it is in the chosen state, `0` otherwise. The unit of the first info (e.g. `°C`) is reused automatically;
+  - **Average**, **Highest**, **Lowest**, **Sum** or **Median** of the info command values (e.g. average room temperature), with the chosen number of **decimals**. The condition and expected value of the lines are not used; a scenario counts as `1` if it is in the chosen state, `0` otherwise. The unit of the first info (e.g. `°C`) is reused automatically and follows the selected infos (e.g. `%` if you switch to humidity); a unit typed manually in the command configuration is kept;
   - **Number of matches**: number of lines meeting their condition (e.g. number of open windows);
   - **According to the rule (then / else)**: like Other, with numeric values (default `1` / `0`);
 - **Other**: free text, the command takes the **then** value (default `on`) if the rule is met, otherwise the **else** value (default `off`).

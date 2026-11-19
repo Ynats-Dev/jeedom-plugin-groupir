@@ -363,29 +363,44 @@ class groupir extends eqLogic {
   }
 
   /**
-   * Calcul numérique (moyenne, plus haut...) : reprend l'unité de la première info des lignes (ex. °C)
-   * si la commande du groupe n'en a pas encore (modifiable ensuite dans sa configuration).
+   * Unité des commandes info du groupe, gérée automatiquement :
+   *  - calcul sur les valeurs (moyenne, plus haut...) : unité de la première info des lignes (ex. °C, %) ;
+   *  - autres cas (binaire, texte, nombre de correspondances, selon la règle) : pas d'unité.
+   * L'unité posée par le plugin est mémorisée (configuration "groupirAutoUnit") : elle suit les infos choisies
+   * (ex. groupe Températures dupliqué en Humidité : °C devient %). Une unité saisie à la main est conservée.
    */
   private function applyNumericUnits() {
     foreach ($this->getGroupCommands() as $command) {
-      if (($command['type'] ?? 'info') == 'action' || self::infoSubType($command) != 'numeric'
-        || !in_array(self::infoAggregate($command), self::VALUE_AGGREGATES)) {
+      if (($command['type'] ?? 'info') == 'action') {
         continue;
       }
       $cmd = $this->getCmd('info', 'status::' . $command['id']);
-      if (!is_object($cmd) || trim((string) $cmd->getUnite()) !== '') {
+      if (!is_object($cmd)) {
         continue;
       }
-      foreach ($command['members'] ?? array() as $member) {
-        $infoId = self::memberCmdId($member, 'info');
-        $info = ($infoId === null) ? null : cmd::byId($infoId);
-        $unit = is_object($info) ? trim((string) $info->getUnite()) : '';
-        if ($unit !== '') {
-          $cmd->setUnite($unit);
-          $cmd->save();
-          break;
+      $expected = '';
+      if (self::infoSubType($command) == 'numeric' && in_array(self::infoAggregate($command), self::VALUE_AGGREGATES)) {
+        foreach ($command['members'] ?? array() as $member) {
+          $infoId = self::memberCmdId($member, 'info');
+          $info = ($infoId === null) ? null : cmd::byId($infoId);
+          $unit = is_object($info) ? trim((string) $info->getUnite()) : '';
+          if ($unit !== '') {
+            $expected = $unit;
+            break;
+          }
         }
       }
+      $current = trim((string) $cmd->getUnite());
+      $auto = $cmd->getConfiguration('groupirAutoUnit', null);
+      // Unité modifiée à la main (différente de celle posée par le plugin) : on n'y touche pas.
+      // Commande sans unité mémorisée (créée avant ce suivi) : on ne fait que remplacer, jamais vider.
+      $managed = ($current === '' || ($auto !== null && $current === (string) $auto) || ($auto === null && $expected !== ''));
+      if (!$managed || ($current === $expected && $auto === $expected)) {
+        continue;
+      }
+      $cmd->setUnite($expected);
+      $cmd->setConfiguration('groupirAutoUnit', $expected);
+      $cmd->save();
     }
   }
 

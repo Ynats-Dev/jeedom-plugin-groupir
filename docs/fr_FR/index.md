@@ -71,7 +71,7 @@ Le **type** de la commande se choisit comme dans Jeedom, et les options proposé
 
 - **Binaire** : la commande vaut `1` si la règle est respectée, sinon `0` (compatible avec les widgets et types génériques binaires) ;
 - **Numérique** : la commande calcule une valeur à partir des lignes :
-  - **Moyenne**, **Plus haut**, **Plus bas**, **Somme** ou **Médiane** des valeurs des commandes info (ex. température moyenne des pièces), avec le nombre de **décimales** choisi. La condition et la valeur attendue des lignes ne servent pas ; un scénario compte pour `1` s'il est dans l'état choisi, `0` sinon. L'unité de la première info (ex. `°C`) est reprise automatiquement ;
+  - **Moyenne**, **Plus haut**, **Plus bas**, **Somme** ou **Médiane** des valeurs des commandes info (ex. température moyenne des pièces), avec le nombre de **décimales** choisi. La condition et la valeur attendue des lignes ne servent pas ; un scénario compte pour `1` s'il est dans l'état choisi, `0` sinon. L'unité de la première info (ex. `°C`) est reprise automatiquement et suit les infos choisies (ex. `%` si vous passez à l'humidité) ; une unité saisie à la main dans la configuration de la commande est conservée ;
   - **Nombre de correspondances** : nombre de lignes qui respectent leur condition (ex. nombre de fenêtres ouvertes) ;
   - **Selon la règle (alors / sinon)** : comme Autre, avec des valeurs numériques (par défaut `1` / `0`) ;
 - **Autre** : texte libre, la commande prend la valeur **alors** (par défaut `on`) si la règle est respectée, sinon la valeur **sinon** (par défaut `off`).

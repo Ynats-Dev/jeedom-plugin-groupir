@@ -71,7 +71,7 @@ Der **Typ** des Befehls wird wie in Jeedom gewählt, und die angebotenen Optione
 
 - **Binär**: der Befehl ist `1`, wenn die Regel erfüllt ist, sonst `0` (kompatibel mit binären Widgets und generischen Typen);
 - **Numerisch**: der Befehl berechnet einen Wert aus den Zeilen:
-  - **Durchschnitt**, **Höchster Wert**, **Niedrigster Wert**, **Summe** oder **Median** der Werte der Infobefehle (z. B. Durchschnittstemperatur der Räume), mit der gewählten Anzahl an **Dezimalstellen**. Bedingung und erwarteter Wert der Zeilen werden nicht verwendet; ein Szenario zählt `1`, wenn es im gewählten Zustand ist, sonst `0`. Die Einheit der ersten Info (z. B. `°C`) wird automatisch übernommen;
+  - **Durchschnitt**, **Höchster Wert**, **Niedrigster Wert**, **Summe** oder **Median** der Werte der Infobefehle (z. B. Durchschnittstemperatur der Räume), mit der gewählten Anzahl an **Dezimalstellen**. Bedingung und erwarteter Wert der Zeilen werden nicht verwendet; ein Szenario zählt `1`, wenn es im gewählten Zustand ist, sonst `0`. Die Einheit der ersten Info (z. B. `°C`) wird automatisch übernommen und folgt den gewählten Infos (z. B. `%` beim Wechsel zur Luftfeuchtigkeit); eine in der Befehlskonfiguration manuell eingegebene Einheit bleibt erhalten;
   - **Anzahl der Übereinstimmungen**: Anzahl der Zeilen, die ihre Bedingung erfüllen (z. B. Anzahl offener Fenster);
   - **Gemäß der Regel (dann / sonst)**: wie Andere, mit numerischen Werten (Standard `1` / `0`);
 - **Andere**: freier Text, der Befehl nimmt den Wert **alors** (Standard `on`) an, wenn die Regel erfüllt ist, andernfalls den Wert **sinon** (Standard `off`).
