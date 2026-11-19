@@ -559,6 +559,15 @@ a.groupir-linked-item > i {
   width: auto;
   flex: 0 1 220px;
 }
+#grouptab .gr-state-values select.gr-subtype {
+  width: auto;
+  flex: 0 1 130px;
+}
+#grouptab .gr-state-values input[data-l1key=valueTrue]:disabled,
+#grouptab .gr-state-values input[data-l1key=valueFalse]:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
 #grouptab .gr-state-values input.gr-rule-count {
   flex: 0 0 70px;
 }
@@ -570,4 +579,148 @@ a.groupir-linked-item > i {
 }
 #grouptab .gr-state-info .gr-scen-action {
   grid-column: 3 / 5;
+}
+
+/* ---------- Options selon le type de valeur (info) ---------- */
+#grouptab .gr-opt {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+#grouptab .gr-state-values select.gr-aggregate {
+  width: auto;
+  flex: 0 1 240px;
+}
+#grouptab .gr-state-values input.gr-decimals {
+  flex: 0 0 60px;
+  width: 60px;
+}
+#grouptab .gr-state-info.gr-hide-value .gr-scen-action {
+  grid-column: 3 / 4;
+}
+#grouptab .gr-subtype-hint {
+  display: none;
+  margin-top: 10px;
+  padding: 6px 10px;
+  border-radius: 6px;
+  border: 1px solid var(--groupir-info);
+  background: rgba(3, 155, 229, 0.08);
+}
+#grouptab .gr-subtype-hint > i {
+  color: var(--groupir-info);
+  margin-right: 4px;
+}
+#grouptab .gr-subtype-hint .btn {
+  margin-left: 6px;
+}
+
+/* ---------- Fraîcheur des données (info) ---------- */
+#grouptab .gr-state-stale {
+  margin-top: 6px;
+  padding-top: 6px;
+}
+#grouptab .gr-stale-check {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0 !important;
+  padding: 0;
+  font-weight: 600;
+  opacity: 1 !important;
+  cursor: pointer;
+}
+#grouptab .gr-stale-check {
+  white-space: nowrap;
+  flex: 0 0 auto;
+}
+#grouptab .gr-state-values .gr-stale-check input[type=checkbox] {
+  position: static;
+  flex: 0 0 auto;
+  width: auto;
+  margin: 0;
+}
+#grouptab .gr-stale-help {
+  margin-right: 8px;
+  color: var(--groupir-info);
+  cursor: help;
+}
+#grouptab .gr-stale-check i {
+  color: var(--groupir-info);
+}
+#grouptab .gr-state-values input.gr-stale-delay {
+  flex: 0 0 80px;
+  width: 80px;
+}
+
+/* ---------- Valeur actuelle dans l'en-tête d'une commande info ---------- */
+#grouptab .gr-head-value {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  flex: 0 0 auto;
+  min-width: 34px;
+  padding: 0 9px;
+  border-radius: 999px;
+  font-size: 0.9em;
+  font-weight: 700;
+  line-height: 21px;
+  justify-content: center;
+  white-space: nowrap;
+  background: rgba(127, 127, 127, 0.15);
+  cursor: help;
+}
+#grouptab .gr-head-value.is-ok {
+  color: #2fa84f;
+  background: rgba(47, 168, 79, 0.14);
+}
+#grouptab .gr-head-value.is-ko {
+  color: #e5484d;
+  background: rgba(229, 72, 77, 0.12);
+}
+#grouptab .gr-head-value.is-value {
+  color: var(--link-color, #039be5);
+  background: rgba(3, 155, 229, 0.12);
+}
+#grouptab .gr-head-warn {
+  color: #f0a020;
+}
+
+/* ---------- Nom du groupe dans l'onglet Correspondances ---------- */
+#grouptab .gr-group-name {
+  padding: 1px 9px;
+  border-radius: 6px;
+  font-weight: 600;
+  background: rgba(127, 127, 127, 0.15);
+  max-width: 320px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ---------- Commande désactivée ---------- */
+#grouptab .gr-state.gr-state-disabled {
+  border-left-color: #8a949e !important;
+}
+#grouptab .gr-state.gr-state-disabled .gr-state-body,
+#grouptab .gr-state.gr-state-disabled .gr-state-header input[data-l1key=name],
+#grouptab .gr-state.gr-state-disabled .gr-head-value,
+#grouptab .gr-state.gr-state-disabled .gr-members-count {
+  opacity: 0.5;
+}
+#grouptab .gr-disabled-badge {
+  color: #8a949e;
+  background: rgba(127, 127, 127, 0.15);
+}
+
+/* ---------- Info : bloc des scénarios séparé des équipements ---------- */
+#grouptab .gr-scens-head {
+  margin-top: 10px;
+  color: #8e6bd8;
+}
+#grouptab .gr-scens-head span:nth-child(3) {
+  grid-column: 3 / 5;
+}
+#grouptab .gr-state.gr-hide-value .gr-scens-head span:nth-child(3) {
+  grid-column: 3 / 4;
 }

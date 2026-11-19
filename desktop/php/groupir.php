@@ -144,7 +144,7 @@ $eqLogics = eqLogic::byType($plugin->getId());
 			<!-- ===================== Onglet Correspondances ===================== -->
 			<div role="tabpanel" class="tab-pane" id="grouptab">
 				<div class="groupir-toolbar">
-					<div class="groupir-section groupir-section--inline"><i class="fas fa-layer-group"></i><span>{{Commandes du groupe}}</span> <span class="groupir-count" id="span_grCount">0</span></div>
+					<div class="groupir-section groupir-section--inline"><i class="fas fa-layer-group"></i><span>{{Commandes du groupe}}</span> <span class="gr-group-name" id="span_grName"></span> <span class="groupir-count" id="span_grCount">0</span></div>
 					<div class="groupir-spacer"></div>
 					<a class="btn btn-default btn-sm roundedLeft bt_grCollapseAll" data-collapse="1" title="{{Tout plier}}"><i class="fas fa-compress-alt"></i>
 					</a><a class="btn btn-default btn-sm roundedRight bt_grCollapseAll" data-collapse="0" title="{{Tout déplier}}"><i class="fas fa-expand-alt"></i></a>

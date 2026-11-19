@@ -27,6 +27,16 @@ var GR_OPERATORS = [
   { value: 'not_contains', label: '{{ne contient pas}}' }
 ]
 
+var GR_AGGREGATES = [
+  { value: 'avg', label: '{{Moyenne}}' },
+  { value: 'max', label: '{{Plus haut}}' },
+  { value: 'min', label: '{{Plus bas}}' },
+  { value: 'sum', label: '{{Somme}}' },
+  { value: 'median', label: '{{Médiane}}' },
+  { value: 'count', label: '{{Nombre de correspondances}}' },
+  { value: 'rule', label: '{{Selon la règle (alors / sinon)}}' }
+]
+
 function grOperatorOptions(_withAny) {
   var html = _withAny ? '<option value="">{{quelle que soit la valeur}}</option>' : ''
   for (var i in GR_OPERATORS) {
@@ -68,8 +78,89 @@ function grApplyCmdIds() {
     var cmdId = (id != '') ? grCmdIdsByLogical[logicalId] : undefined
     var button = $(this).find('.bt_grConfigureCmd')
     button.attr('data-cmd_id', init(cmdId)).toggleClass('gr-disabled', !cmdId)
+    $(this).attr('data-cmd_id', init(cmdId))
+  })
+  grApplyInfoValues()
+}
+
+/* ---------- Activer / désactiver une commande du groupe ---------- */
+
+function grSetEnabled(_state, _enabled) {
+  _state.find('.grStateAttr[data-l1key=enabled]').val(_enabled ? 1 : 0)
+  _state.toggleClass('gr-state-disabled', !_enabled)
+  _state.find('.bt_grToggleEnabled')
+    .toggleClass('btn-success', _enabled).toggleClass('btn-default', !_enabled)
+    .attr('title', _enabled ? '{{Commande activée : cliquez pour la désactiver}}' : '{{Commande désactivée : cliquez pour l\'activer}}')
+    .find('i').attr('class', _enabled ? 'fas fa-toggle-on' : 'fas fa-toggle-off')
+  _state.find('.gr-disabled-badge').toggle(!_enabled)
+}
+
+$('#grouptab').off('click', '.bt_grToggleEnabled').on('click', '.bt_grToggleEnabled', function () {
+  var state = $(this).closest('.gr-state')
+  grSetEnabled(state, state.find('.grStateAttr[data-l1key=enabled]').val() == '0')
+})
+
+/* ---------- Nom du groupe rappelé dans l'onglet Correspondances (suit la saisie de l'onglet Général) ---------- */
+
+function grRefreshGroupName(_name) {
+  var name = String(init(_name, $('.eqLogicAttr[data-l1key=name]').value())).trim()
+  $('#span_grName').text(name).toggle(name != '')
+}
+
+$('.eqLogicAttr[data-l1key=name]').off('input.grName change.grName').on('input.grName change.grName', function () {
+  grRefreshGroupName($(this).value())
+})
+
+/* ---------- Valeur actuelle des commandes info (en-tête, visible même pliée) ---------- */
+
+var grInfoValues = {}
+
+function grLoadInfoValues(_eqLogicId) {
+  grInfoValues = {}
+  if (init(_eqLogicId) == '') {
+    return
+  }
+  $.ajax({
+    type: 'POST',
+    url: GR_AJAX_URL,
+    data: { action: 'getInfoValues', id: _eqLogicId },
+    dataType: 'json',
+    global: false,
+    success: function (data) {
+      if (data.state != 'ok') return
+      $.each(data.result || [], function (i, info) {
+        grInfoValues[String(info.cmd_id)] = info
+      })
+      grApplyInfoValues()
+    }
   })
 }
+
+function grApplyInfoValues() {
+  $('#div_grStates').children('.gr-state-info').each(function () {
+    var info = grInfoValues[String(init($(this).attr('data-cmd_id')))]
+    var pill = $(this).find('.gr-head-value')
+    if (!info) {
+      pill.hide()
+      return
+    }
+    pill.attr('class', 'gr-head-value ' + init(info.status, 'is-none')).attr('title', init(info.title)).show()
+    pill.find('.gr-head-value-text').text(init(info.value) === '' ? '-' : info.value)
+    pill.find('.gr-head-warn').toggle(init(info.stale) != '').attr('title', init(info.stale))
+  })
+}
+
+/* Mise à jour en direct (même événement que le widget) */
+$('body').off('groupir::update.grEditor').on('groupir::update.grEditor', function (_event, _data) {
+  _data = _data || (_event.originalEvent && _event.originalEvent.detail)
+  if (!_data || String(_data.eqLogic_id) != String($('.eqLogicAttr[data-l1key=id]').value())) {
+    return
+  }
+  $.each(_data.infos || [], function (i, info) {
+    grInfoValues[String(info.cmd_id)] = info
+  })
+  grApplyInfoValues()
+})
 
 /* Fenêtre standard de configuration d'une commande Jeedom (historique, type générique, alertes, affichage...) */
 function grOpenCmdConfigure(_cmdId) {
@@ -129,29 +220,64 @@ function grAddState(_state) {
   div += '<a class="gr-toggle bt_grToggleState" title="{{Plier / déplier}}"><i class="fas fa-chevron-down"></i></a>'
   div += isInfo ? '<span class="groupir-badge is-info"><i class="fas fa-eye"></i> {{Info}}</span>' : '<span class="groupir-badge is-action"><i class="fas fa-hand-pointer"></i> {{Action}}</span>'
   div += '<input class="grStateAttr form-control input-sm" data-l1key="name" placeholder="' + (isInfo ? '{{Nom, ex. on, off}}' : '{{Nom, ex. Allumer, Éteindre}}') + '">'
+  if (isInfo) {
+    div += '<span class="gr-head-value is-none" style="display:none;"><span class="gr-head-warn" style="display:none;"><i class="fas fa-exclamation-triangle"></i></span><span class="gr-head-value-text"></span></span>'
+  }
+  div += '<span class="groupir-badge gr-disabled-badge" style="display:none;"><i class="fas fa-power-off"></i> {{Désactivée}}</span>'
   div += '<span class="groupir-meta gr-members-count"></span>'
   div += '<a class="btn btn-default btn-xs bt_grAddMemberEq"><i class="fas fa-plus-circle"></i> {{Équipement}}</a>'
   div += '<a class="btn btn-default btn-xs bt_grAddMemberScenario"><i class="fas fa-cogs"></i> {{Scénario}}</a>'
+  div += '<input type="hidden" class="grStateAttr" data-l1key="enabled">'
+  div += '<a class="btn btn-default btn-xs bt_grToggleEnabled"><i class="fas fa-toggle-on"></i></a>'
   div += '<a class="btn btn-default btn-xs bt_grConfigureCmd" title="{{Configuration de la commande : historique, type générique, alertes, affichage}}"><i class="fas fa-cog"></i></a>'
   div += '<a class="btn btn-default btn-xs bt_grCloneState" title="{{Cloner cette commande et ses équipements}}"><i class="fas fa-clone"></i></a>'
   div += '<a class="btn btn-danger btn-xs bt_grRemoveState" title="{{Supprimer cette commande}}"><i class="fas fa-trash-alt"></i></a>'
   div += '</div>'
   div += '<div class="gr-state-body">'
   div += '<div class="gr-members-head">'
-  div += '<span>{{Objet}}</span><span>{{Équipement}}</span>'
-  div += isInfo ? '<span>{{Commande info}}</span><span>{{Valeur attendue}}</span><span></span>' : '<span>{{Commandes action (dans l\'ordre)}}</span><span>{{Valeur}}</span><span></span><span></span>'
+  if (isInfo) {
+    div += '<span>{{Objet}}</span><span>{{Équipement}}</span><span>{{Commande info}}</span><span>{{Valeur attendue}}</span><span></span>'
+  } else {
+    // Action : équipements et scénarios dans une seule liste ordonnée, libellés adaptés quand il y a des scénarios
+    div += '<span class="gr-head-col1">{{Objet}}</span><span class="gr-head-col2">{{Équipement}}</span><span>{{Commandes action (dans l\'ordre)}}</span><span>{{Valeur}}</span><span></span><span></span>'
+  }
   div += '</div>'
   div += '<div class="gr-members"></div>'
-  div += '<div class="gr-members-empty"><i class="fas fa-plug"></i> {{Aucun équipement : cliquez sur "Équipement" pour en ajouter un.}}</div>'
   if (isInfo) {
+    // Info : scénarios dans un bloc séparé (l'ordre des lignes n'a pas d'importance)
+    div += '<div class="gr-members-head gr-scens-head"><span>{{Groupe de scénarios}}</span><span>{{Scénario}}</span><span>{{État attendu}}</span><span></span><span></span></div>'
+    div += '<div class="gr-scens"></div>'
+  }
+  div += '<div class="gr-members-empty"><i class="fas fa-plug"></i> {{Aucune ligne : cliquez sur "Équipement" ou "Scénario" pour en ajouter une.}}</div>'
+  if (isInfo) {
+    div += '<div class="gr-subtype-hint"></div>'
     div += '<div class="gr-state-values">'
     div += '<span class="gr-state-values-title"><i class="fas fa-reply"></i> {{Valeurs renvoyées par la commande}}</span>'
-    div += '<select class="grStateAttr form-control input-sm gr-rule" data-l1key="rule">'
+    div += '<label>{{Type}}</label><select class="grStateAttr form-control input-sm gr-subtype" data-l1key="subType" title="{{Type de valeur de la commande info, comme dans Jeedom}}">'
+    div += '<option value="binary">{{Binaire}}</option><option value="numeric">{{Numérique}}</option><option value="string">{{Autre}}</option>'
+    div += '</select>'
+    // Numérique : calcul sur les valeurs des lignes
+    div += '<span class="gr-opt gr-opt-aggregate"><select class="grStateAttr form-control input-sm gr-aggregate" data-l1key="aggregate">'
+    $.each(GR_AGGREGATES, function (i, a) {
+      div += '<option value="' + a.value + '">' + a.label + '</option>'
+    })
+    div += '</select></span>'
+    div += '<span class="gr-opt gr-opt-decimals"><input type="number" min="0" max="6" step="1" class="grStateAttr form-control input-sm gr-decimals" data-l1key="decimals" placeholder="2"><label>{{décimales}}</label></span>'
+    // Binaire, Autre et Numérique "selon la règle" : règle puis valeurs alors / sinon
+    div += '<span class="gr-opt gr-opt-rule"><select class="grStateAttr form-control input-sm gr-rule" data-l1key="rule">'
     div += '<option value="all">{{si tous correspondent}}</option><option value="any">{{si au moins un correspond}}</option><option value="atleast">{{si au moins N correspondent}}</option>'
     div += '</select>'
-    div += '<input type="number" min="1" step="1" class="grStateAttr form-control input-sm gr-rule-count" data-l1key="ruleCount" placeholder="N" title="{{Nombre minimum de lignes qui correspondent}}">'
-    div += '<label>{{alors}}</label><input class="grStateAttr form-control input-sm" data-l1key="valueTrue" placeholder="ok">'
-    div += '<label>{{sinon}}</label><input class="grStateAttr form-control input-sm" data-l1key="valueFalse" placeholder="ko">'
+    div += '<input type="number" min="1" step="1" class="grStateAttr form-control input-sm gr-rule-count" data-l1key="ruleCount" placeholder="N" title="{{Nombre minimum de lignes qui correspondent}}"></span>'
+    div += '<span class="gr-opt gr-opt-values"><label>{{alors}}</label><input class="grStateAttr form-control input-sm" data-l1key="valueTrue" placeholder="on">'
+    div += '<label>{{sinon}}</label><input class="grStateAttr form-control input-sm" data-l1key="valueFalse" placeholder="off"></span>'
+    div += '</div>'
+    // Option : ignorer les équipements dont les données ne sont plus à jour (ex. sonde sans pile)
+    div += '<div class="gr-state-values gr-state-stale">'
+    div += '<label class="gr-stale-check"><input type="checkbox" class="grStateAttr" data-l1key="staleCheck"><i class="fas fa-heartbeat"></i><span>{{Vérifier la fraîcheur des données}}</span></label>'
+    div += '<sup class="gr-stale-help"><i class="fas fa-question-circle tooltips" title="{{Ignore les équipements dont les données ne sont plus mises à jour (ex. sonde de température sans pile) : leur valeur ne compte plus dans la règle ni dans le calcul, et le widget affiche un avertissement. Un équipement en timeout dans Jeedom est aussi ignoré.}}"></i></sup>'
+    div += '<span class="gr-opt gr-opt-stale"><label>{{ignorer un équipement sans mise à jour depuis}}</label>'
+    div += '<input type="number" min="1" step="1" class="grStateAttr form-control input-sm gr-stale-delay" data-l1key="staleDelay" placeholder="60"><label>{{minutes}}</label>'
+    div += '<span class="groupir-meta"><i class="fas fa-info-circle"></i> {{Un équipement en timeout est aussi ignoré. Le widget affiche alors un avertissement.}}</span></span>'
     div += '</div>'
   } else {
     div += '<div class="gr-state-values">'
@@ -165,9 +291,26 @@ function grAddState(_state) {
   var state = $(div)
   $('#div_grStates').append(state)
   state.setValues(_state, '.grStateAttr')
+  grSetEnabled(state, init(_state.enabled, 1) != 0)
   if (isInfo) {
     state.find('.gr-rule').val(init(_state.rule, 'all'))
+    state.find('.gr-subtype').val(grInfoSubType(_state))
+    state.find('.gr-aggregate').val(grInfoAggregate(_state))
+    if (init(_state.decimals) === '') {
+      state.find('.gr-decimals').val(2)
+    }
+    if (init(_state.staleDelay) === '') {
+      state.find('.gr-stale-delay').val(60)
+    }
     grRefreshRule(state)
+    grRefreshSubType(state)
+    grRefreshStale(state)
+    // Bulles d'aide au style Jeedom (sinon infobulle native du navigateur)
+    if (typeof jeedomUtils !== 'undefined' && typeof jeedomUtils.initTooltips === 'function') {
+      jeedomUtils.initTooltips(state)
+    } else if (typeof initTooltips === 'function') {
+      initTooltips(state)
+    }
   }
   var members = _state.members || []
   for (var i in members) {
@@ -267,7 +410,11 @@ function grObjectItems() {
 }
 
 /* Équipements déjà choisis dans les autres lignes de la même commande */
+/* Équipements déjà utilisés par les autres lignes (commande action seulement : en info, un équipement peut revenir) */
 function grUsedEqIds(_row) {
+  if (grRowType(_row) == 'info') {
+    return []
+  }
   return _row.siblings('.gr-member').map(function () {
     return String(init($(this).attr('data-eqLogic_id')))
   }).get().filter(function (id) { return id != '' })
@@ -358,8 +505,32 @@ function grRowRenderCmds(_row, _current) {
     })
     return
   }
-  grFillSelect(_row.find('.grMemberAttr[data-l1key=info_id]'), grCmdItems(_row.attr('data-eqLogic_id'), 'info'), '{{Commande info...}}', grRowFilter(_row, 'cmd'), _current)
+  var used = grUsedInfoIds(_row)
+  var items = $.grep(grCmdItems(_row.attr('data-eqLogic_id'), 'info'), function (cmd) { return used.indexOf(cmd.id) < 0 })
+  grFillSelect(_row.find('.grMemberAttr[data-l1key=info_id]'), items, '{{Commande info...}}', grRowFilter(_row, 'cmd'), _current)
   grUpdateMemberHints(_row)
+}
+
+/* Commandes info déjà choisies par les autres lignes (une même commande info ne peut pas revenir) */
+function grUsedInfoIds(_row) {
+  return _row.siblings('.gr-member:not(.gr-scen)').map(function () {
+    return String($(this).find('.grMemberAttr[data-l1key=info_id]').val() || '')
+  }).get().filter(function (id) { return id != '' })
+}
+
+/* Commande info changée : les autres lignes du même équipement ne la proposent plus (et proposent de nouveau l'ancienne) */
+function grRefreshSiblingInfos(_row) {
+  var eqId = String(init(_row.attr('data-eqLogic_id')))
+  _row.siblings('.gr-member:not(.gr-scen)').each(function () {
+    var other = $(this)
+    if (eqId == '' || String(init(other.attr('data-eqLogic_id'))) != eqId) {
+      return
+    }
+    var current = String(other.find('.grMemberAttr[data-l1key=info_id]').val() || '')
+    var used = grUsedInfoIds(other)
+    var items = $.grep(grCmdItems(eqId, 'info'), function (cmd) { return used.indexOf(cmd.id) < 0 })
+    grFillSelect(other.find('.grMemberAttr[data-l1key=info_id]'), items, '{{Commande info...}}', grRowFilter(other, 'cmd'), current)
+  })
 }
 
 function grStepRenderCmds(_step, _current, _actionValue) {
@@ -412,7 +583,7 @@ function grRefreshSiblingEqs(_row, _state) {
 function grRowEqChanged(_row) {
   var select = _row.find('.grMemberAttr[data-l1key=eqLogic_id]')
   var id = String(select.val() || '')
-  var duplicate = _row.siblings('.gr-member').filter(function () {
+  var duplicate = (grRowType(_row) == 'info') ? $() : _row.siblings('.gr-member').filter(function () {
     return String($(this).attr('data-eqLogic_id')) == id
   })
   if (id != '' && duplicate.length) {
@@ -498,6 +669,7 @@ function grAddMember(_state, _eqLogicId, _member) {
 function grUpdateMemberHints(_row) {
   var info = _row.find('.grMemberAttr[data-l1key=info_id] option:selected').data('item')
   _row.find('.grMemberAttr[data-l1key=value]').attr('placeholder', info ? '{{actuel :}} ' + init(info.value) : '{{Valeur}}')
+  grDetectSubType(_row.closest('.gr-state'))
 }
 
 /* Action : champ de valeur adapté au sous-type de la commande */
@@ -559,9 +731,22 @@ function grRefreshValueColumn(_state) {
 function grRefreshMembersEmpty(_state) {
   var count = _state.find('.gr-member').length
   var empty = count == 0
-  _state.find('.gr-members-count').text(empty ? '' : count + (count > 1 ? ' {{équipements}}' : ' {{équipement}}'))
+  // Équipements et scénarios comptés séparément (ex. « 2 équipements · 1 scénario »)
+  var scenarios = _state.find('.gr-member.gr-scen').length
+  var eqs = count - scenarios
+  var parts = []
+  if (eqs > 0) parts.push(eqs + (eqs > 1 ? ' {{équipements}}' : ' {{équipement}}'))
+  if (scenarios > 0) parts.push(scenarios + (scenarios > 1 ? ' {{scénarios}}' : ' {{scénario}}'))
+  _state.find('.gr-members-count').text(parts.join(' · '))
   _state.find('.gr-members-empty').toggle(empty)
-  _state.find('.gr-members-head').toggle(!empty)
+  if (_state.attr('data-type') == 'action') {
+    _state.find('.gr-members-head').toggle(!empty)
+    _state.find('.gr-head-col1').text(scenarios > 0 ? '{{Objet / Groupe}}' : '{{Objet}}')
+    _state.find('.gr-head-col2').text(scenarios > 0 ? '{{Équipement / Scénario}}' : '{{Équipement}}')
+  } else {
+    _state.find('.gr-members-head').not('.gr-scens-head').toggle(eqs > 0)
+    _state.find('.gr-scens-head').toggle(scenarios > 0)
+  }
 }
 
 function grCollectStates() {
@@ -576,11 +761,19 @@ function grCollectState(_state) {
     var type = $(this).attr('data-type') == 'action' ? 'action' : 'info'
     item = {
       id: $(this).find('.grStateAttr[data-l1key=id]').value(),
+      enabled: $(this).find('.grStateAttr[data-l1key=enabled]').value() == '0' ? 0 : 1,
       type: type,
       name: $(this).find('.grStateAttr[data-l1key=name]').value(),
       members: []
     }
     if (type == 'info') {
+      item.subType = $(this).find('.grStateAttr[data-l1key=subType]').value()
+      if (item.subType == 'numeric') {
+        item.aggregate = $(this).find('.grStateAttr[data-l1key=aggregate]').value()
+        item.decimals = $(this).find('.grStateAttr[data-l1key=decimals]').value()
+      }
+      item.staleCheck = $(this).find('.grStateAttr[data-l1key=staleCheck]').value()
+      item.staleDelay = $(this).find('.grStateAttr[data-l1key=staleDelay]').value()
       item.rule = $(this).find('.grStateAttr[data-l1key=rule]').value()
       item.ruleCount = $(this).find('.grStateAttr[data-l1key=ruleCount]').value()
       item.valueTrue = $(this).find('.grStateAttr[data-l1key=valueTrue]').value()
@@ -694,8 +887,8 @@ function grAddScenarioMember(_state, _member) {
   })
   action.append(select)
   row.append(action)
-  row.append('<div class="gr-member-remove"><a class="btn btn-default btn-sm bt_grRemoveMember" title="{{Retirer ce scénario}}"><i class="fas fa-times"></i></a></div>')
-  _state.find('.gr-members').append(row)
+  row.append('<div class="gr-member-remove"><a class="btn btn-default btn-sm bt_grCloneMember" title="{{Cloner cette ligne pour un autre scénario}}"><i class="fas fa-clone"></i></a><a class="btn btn-default btn-sm bt_grRemoveMember" title="{{Retirer ce scénario}}"><i class="fas fa-times"></i></a></div>')
+  _state.find(isInfo ? '.gr-scens' : '.gr-members').append(row)
   var scenarioId = String(init(_member.scenario_id))
   var sc = $.grep(grScenarioList || [], function (x) { return String(x.id) == scenarioId })[0]
   grScenRenderGroups(row, sc ? sc.group : '')
@@ -706,6 +899,23 @@ function grAddScenarioMember(_state, _member) {
   }
   grRefreshMembersEmpty(_state)
   return row
+}
+
+/* Clone une ligne scénario juste en dessous : même groupe de scénarios et même action / état, scénario à choisir */
+function grCloneScenarioMember(_row) {
+  var state = _row.closest('.gr-state')
+  var key = (state.attr('data-type') == 'action') ? 'scenarioAction' : 'scenarioState'
+  var member = { scenario_id: '' }
+  member[key] = _row.find('.grMemberAttr[data-l1key=' + key + ']').val()
+  var group = String(_row.find('.gr-scen-group').val() || '')
+  var clone = grAddScenarioMember(state, member)
+  clone.insertAfter(_row)
+  if (group != '') {
+    grScenRenderGroups(clone, group)
+    grScenRenderScenarios(clone, '')
+  }
+  clone.find('.grMemberAttr[data-l1key=scenario_id]').focus()
+  return clone
 }
 
 $('#grouptab').off('click', '.bt_grAddMemberScenario').on('click', '.bt_grAddMemberScenario', function () {
@@ -763,13 +973,164 @@ $('#grouptab').off('change', '.gr-rule').on('change', '.gr-rule', function () {
   grRefreshRule($(this).closest('.gr-state'))
 })
 
+/* ---------- Type de valeur d'une commande info (binaire / numérique / autre) ---------- */
+
+var GR_SUBTYPE_DEFAULTS = {
+  binary: { valueTrue: '1', valueFalse: '0' },
+  numeric: { valueTrue: '1', valueFalse: '0' },
+  string: { valueTrue: 'on', valueFalse: 'off' }
+}
+
+var GR_SUBTYPE_LABELS = {
+  binary: '{{Binaire}}',
+  numeric: '{{Numérique}}',
+  string: '{{Autre}}'
+}
+
+/* Calculs d'une commande numérique : sur les valeurs des lignes, ou selon la règle (alors / sinon) */
+var GR_VALUE_AGGREGATES = ['avg', 'max', 'min', 'sum', 'median']
+
+function grIsNumeric(_value) {
+  return String(_value).trim() != '' && !isNaN(String(_value).trim())
+}
+
+/* Type enregistré, sinon déduit des valeurs (groupes créés avant ce choix) : 1 / 0 binaire, nombres numérique, sinon autre */
+function grInfoSubType(_state) {
+  var subType = init(_state.subType)
+  if (GR_SUBTYPE_DEFAULTS[subType]) {
+    return subType
+  }
+  var valueTrue = String(init(_state.valueTrue)).trim()
+  var valueFalse = String(init(_state.valueFalse)).trim()
+  if (valueTrue == '1' && valueFalse == '0') {
+    return 'binary'
+  }
+  return (grIsNumeric(valueTrue) && grIsNumeric(valueFalse)) ? 'numeric' : 'string'
+}
+
+/* Calcul enregistré ; groupes créés avant ce choix : selon la règle ; nouvelle commande : moyenne */
+function grInfoAggregate(_state) {
+  var aggregate = init(_state.aggregate)
+  if ($.grep(GR_AGGREGATES, function (a) { return a.value == aggregate }).length) {
+    return aggregate
+  }
+  return init(_state.subType) == '' && init(_state.id) != '' ? 'rule' : 'avg'
+}
+
+/* Options affichées selon le type : règle (binaire, autre), calcul (numérique) */
+function grRefreshSubType(_state) {
+  var subType = _state.find('.gr-subtype').val() || 'string'
+  var aggregate = _state.find('.gr-aggregate').val() || 'avg'
+  var isNumeric = (subType == 'numeric')
+  var usesRule = !isNumeric || aggregate == 'rule'
+  var onValues = isNumeric && GR_VALUE_AGGREGATES.indexOf(aggregate) >= 0
+  _state.find('.gr-opt-aggregate').toggle(isNumeric)
+  _state.find('.gr-opt-decimals').toggle(onValues)
+  _state.find('.gr-opt-rule').toggle(usesRule)
+  _state.find('.gr-opt-values').toggle(usesRule)
+  // Calcul sur les valeurs : condition et valeur attendue inutiles sur les lignes
+  _state.toggleClass('gr-hide-value', onValues)
+  var defaults = GR_SUBTYPE_DEFAULTS[subType]
+  $.each(['valueTrue', 'valueFalse'], function (i, key) {
+    var input = _state.find('.grStateAttr[data-l1key=' + key + ']')
+    input.attr('placeholder', defaults[key])
+    input.attr('type', subType == 'string' ? 'text' : 'number')
+    if (subType == 'binary') {
+      input.val(defaults[key]).prop('disabled', true)
+      return
+    }
+    input.prop('disabled', false)
+    if (subType == 'numeric' && input.val() != '' && !grIsNumeric(input.val())) {
+      input.val('')
+    }
+  })
+  grDetectSubType(_state)
+}
+
+$('#grouptab').off('change', '.gr-subtype, .gr-aggregate').on('change', '.gr-subtype, .gr-aggregate', function () {
+  grRefreshSubType($(this).closest('.gr-state'))
+})
+
+/* ---------- Fraîcheur des données (option d'une commande info) ---------- */
+
+function grRefreshStale(_state) {
+  _state.find('.gr-opt-stale').toggle(_state.find('.grStateAttr[data-l1key=staleCheck]').is(':checked'))
+}
+
+$('#grouptab').off('change', '.grStateAttr[data-l1key=staleCheck]').on('change', '.grStateAttr[data-l1key=staleCheck]', function () {
+  grRefreshStale($(this).closest('.gr-state'))
+})
+
+/* ---------- Détection du type d'après les commandes info des lignes (proposition, jamais imposée) ---------- */
+
+/* Type d'une commande info d'équipement : binaire (ou valeur 0 / 1), numérique, sinon autre */
+function grCmdKind(_cmd) {
+  if (!_cmd) {
+    return ''
+  }
+  if (_cmd.subType == 'binary') {
+    return 'binary'
+  }
+  if (_cmd.subType == 'numeric') {
+    return 'numeric'
+  }
+  var value = String(init(_cmd.value)).trim()
+  if (value == '0' || value == '1') {
+    return 'binary'
+  }
+  return grIsNumeric(value) ? 'numeric' : 'string'
+}
+
+/* Type suggéré : autre si une ligne est du texte, numérique si une ligne est numérique, binaire si toutes le sont */
+function grSuggestedSubType(_state) {
+  var kinds = _state.find('.gr-member:not(.gr-scen)').map(function () {
+    return grCmdKind($(this).find('.grMemberAttr[data-l1key=info_id] option:selected').data('item'))
+  }).get().filter(function (k) { return k != '' })
+  if (kinds.length == 0) {
+    return ''
+  }
+  if (kinds.indexOf('string') >= 0) {
+    return 'string'
+  }
+  return kinds.indexOf('numeric') >= 0 ? 'numeric' : 'binary'
+}
+
+/* Propose de changer le type si les commandes info choisies en suggèrent un autre (sauf si l'utilisateur a refusé) */
+function grDetectSubType(_state) {
+  if (!_state || !_state.length || _state.attr('data-type') == 'action') {
+    return
+  }
+  var hint = _state.find('.gr-subtype-hint')
+  var suggested = grSuggestedSubType(_state)
+  var current = _state.find('.gr-subtype').val()
+  if (suggested == '' || suggested == current || _state.data('grDismissed') == suggested) {
+    hint.empty().hide()
+    return
+  }
+  hint.html('<i class="fas fa-magic"></i> <span>{{Les commandes info choisies semblent de type}} <b>' + GR_SUBTYPE_LABELS[suggested] + '</b> ({{actuellement}} ' + GR_SUBTYPE_LABELS[current] + ').</span> '
+    + '<a class="btn btn-primary btn-xs bt_grApplySubType" data-subtype="' + suggested + '">{{Passer en}} ' + GR_SUBTYPE_LABELS[suggested] + '</a> '
+    + '<a class="btn btn-default btn-xs bt_grDismissSubType" data-subtype="' + suggested + '">{{Garder}} ' + GR_SUBTYPE_LABELS[current] + '</a>').show()
+}
+
+$('#grouptab').off('click', '.bt_grApplySubType').on('click', '.bt_grApplySubType', function () {
+  var state = $(this).closest('.gr-state')
+  state.find('.gr-subtype').val($(this).attr('data-subtype'))
+  grRefreshSubType(state)
+})
+
+$('#grouptab').off('click', '.bt_grDismissSubType').on('click', '.bt_grDismissSubType', function () {
+  var state = $(this).closest('.gr-state')
+  state.data('grDismissed', $(this).attr('data-subtype'))
+  grDetectSubType(state)
+})
+
 /* ---------- Réordonner : commandes, lignes et actions (glisser-déposer) ---------- */
 
 function grMakeSortable(_state) {
   if (typeof $.fn.sortable !== 'function') {
     return
   }
-  _state.find('.gr-members').sortable({ handle: '.gr-row-drag', items: '> .gr-member', axis: 'y', tolerance: 'pointer', forcePlaceholderSize: true, placeholder: 'gr-sort-placeholder' })
+  _state.find('.gr-members, .gr-scens').sortable({ handle: '.gr-row-drag', items: '> .gr-member', axis: 'y', tolerance: 'pointer', forcePlaceholderSize: true, placeholder: 'gr-sort-placeholder' })
   _state.find('.gr-steps').each(function () {
     $(this).sortable({ handle: '.gr-step-drag', items: '> .gr-step', axis: 'y', tolerance: 'pointer', forcePlaceholderSize: true, placeholder: 'gr-sort-placeholder' })
   })
@@ -804,6 +1165,9 @@ function grCmdIdByName(_eqLogicId, _type, _name) {
  */
 function grCloneMember(_row) {
   var state = _row.closest('.gr-state')
+  if (_row.hasClass('gr-scen')) {
+    return grCloneScenarioMember(_row)
+  }
   var template = { objectId: String(_row.find('.gr-obj').val() || '') }
   if (grRowType(_row) == 'info') {
     template.info = grSelectedName(_row.find('.grMemberAttr[data-l1key=info_id]'))
@@ -947,10 +1311,19 @@ $('#grouptab').off('click', '.bt_grCloneState').on('click', '.bt_grCloneState', 
 
 $('#grouptab').off('click', '.bt_grRemoveMember').on('click', '.bt_grRemoveMember', function () {
   var state = $(this).closest('.gr-state')
-  $(this).closest('.gr-member').remove()
+  var removed = $(this).closest('.gr-member')
+  var neighbour = removed.siblings('.gr-member:not(.gr-scen)').filter(function () {
+    return String(init($(this).attr('data-eqLogic_id'))) == String(init(removed.attr('data-eqLogic_id')))
+  }).first()
+  removed.remove()
+  if (neighbour.length && grRowType(neighbour) == 'info') {
+    grRefreshSiblingInfos(neighbour)
+    grRowRenderCmds(neighbour, String(neighbour.find('.grMemberAttr[data-l1key=info_id]').val() || ''))
+  }
   grRefreshSiblingEqs(null, state)
   grRefreshValueColumn(state)
   grRefreshMembersEmpty(state)
+  grDetectSubType(state)
 })
 
 $('.bt_grAddGroupCmd').off('click').on('click', function () {
@@ -966,7 +1339,9 @@ $('#grouptab').off('click', '.bt_grRemoveState').on('click', '.bt_grRemoveState'
 })
 
 $('#grouptab').off('change', '.grMemberAttr[data-l1key=info_id]').on('change', '.grMemberAttr[data-l1key=info_id]', function () {
-  grUpdateMemberHints($(this).closest('.gr-member'))
+  var row = $(this).closest('.gr-member')
+  grUpdateMemberHints(row)
+  grRefreshSiblingInfos(row)
 })
 
 $('#grouptab').off('change', '.grStepAttr[data-l1key=action_id]').on('change', '.grStepAttr[data-l1key=action_id]', function () {
@@ -1079,7 +1454,9 @@ function printEqLogic(_eqLogic) {
   $.each(_eqLogic.cmd || [], function (i, cmd) {
     if (init(cmd.logicalId) != '') grCmdIdsByLogical[cmd.logicalId] = cmd.id
   })
+  grRefreshGroupName(init(_eqLogic.name))
   grLoadLinkedScenarios(init(_eqLogic.id))
+  grLoadInfoValues(init(_eqLogic.id))
   grMakeStatesSortable()
   var commands = (_eqLogic.configuration || {}).commands || []
   // Charge la liste des équipements et les commandes de ceux utilisés avant d'afficher les correspondances

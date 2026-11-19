@@ -8,6 +8,13 @@ lang: de_DE
 # 19/11/2026 - 1.0.0
 
 - Erste Veröffentlichung im Jeedom Market
+- Info-Befehle: Typ Binär, Numerisch oder Andere (standardmäßig on / off), anhand der gewählten Infobefehle vorgeschlagen
+- Numerisch: Durchschnitt, höchster, niedrigster Wert, Summe, Median, Anzahl der Übereinstimmungen oder gemäß der Regel; Dezimalstellen und Einheit automatisch übernommen
+- Option „Aktualität der Daten prüfen“: Geräte ohne aktuelle Aktualisierung oder im Timeout werden ignoriert, mit Warnung im Widget und im Log
+- Info-Befehl: dasselbe Gerät kann in mehreren Zeilen vorkommen (nicht derselbe Infobefehl)
+- Befehle aktivierbar / deaktivierbar
+- Editor: aktueller Wert in der Befehlskopfzeile, Gruppenname angezeigt, Szenarien in einem eigenen Block (Info), Szenario-Zeilen klonbar
+- Reiter Anzeige in der Befehlskonfiguration ausgeblendet (ohne Wirkung auf das Gruppen-Widget)
 - Bereich „Entwicklung" aus der Plugin-Konfiguration entfernt
 - Code bereinigt
 - Oberfläche ins Englische, Deutsche, Spanische und Italienische übersetzt

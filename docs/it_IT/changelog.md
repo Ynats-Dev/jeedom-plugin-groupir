@@ -8,6 +8,13 @@ lang: it_IT
 # 19/11/2026 - 1.0.0
 
 - Prima versione pubblicata sul Market di Jeedom
+- Comandi info: tipo Binario, Numerico o Altro (on / off predefinito), proposto in base ai comandi info scelti
+- Numerico: media, più alto, più basso, somma, mediana, numero di corrispondenze o secondo la regola; decimali e unità ripresa automaticamente
+- Opzione «Verifica l'aggiornamento dei dati»: dispositivi senza aggiornamenti recenti o in timeout ignorati, con avviso nel widget e nel log
+- Comando info: lo stesso dispositivo può comparire su più righe (non lo stesso comando info)
+- Comandi attivabili / disattivabili
+- Editor: valore attuale nell'intestazione dei comandi, nome del gruppo ricordato, scenari in un blocco separato (info), righe scenario clonabili
+- Scheda Visualizzazione nascosta nella configurazione dei comandi (senza effetto sul widget del gruppo)
 - Rimossa la sezione «Sviluppo» dalla configurazione del plugin
 - Pulizia del codice
 - Interfaccia tradotta in inglese, tedesco, spagnolo e italiano

@@ -80,6 +80,18 @@
       color: #2fa84f;
       background: rgba(47, 168, 79, 0.14);
     }
+    .groupir-widget .gw-warn {
+      color: #f0a020;
+      cursor: help;
+    }
+    .groupir-widget .gw-info.is-value .gw-dot {
+      background: var(--link-color, #039be5);
+      box-shadow: 0 0 0 3px rgba(3, 155, 229, 0.18);
+    }
+    .groupir-widget .gw-info.is-value .gw-pill {
+      color: var(--link-color, #039be5);
+      background: rgba(3, 155, 229, 0.12);
+    }
     .groupir-widget .gw-info.is-ko .gw-dot {
       background: #e5484d;
       box-shadow: 0 0 0 3px rgba(229, 72, 77, 0.18);
@@ -155,6 +167,11 @@
             row.className = 'gw-info ' + info.status
             row.title = info.title
             row.querySelector('.gw-info-count').textContent = info.count
+            var warn = row.querySelector('.gw-warn')
+            if (warn) {
+              warn.title = info.stale || ''
+              warn.style.display = info.stale ? '' : 'none'
+            }
             row.querySelector('.gw-pill').textContent = (info.value === '') ? '-' : info.value
           })
           var colors = _data.colors || []

@@ -21,7 +21,8 @@ require_once __DIR__ . '/../../../../core/php/core.inc.php';
 /**
  * Un équipement Groupir est un groupe d'équipements (ex. "Ampoules salon").
  *  - configuration.commands : commandes du groupe, chacune étant un sous-groupe d'équipements :
- *      type "info"   : {id, type, name, rule, ruleCount, valueTrue, valueFalse,
+ *      type "info"   : {id, type, name, subType (binary | numeric | string), aggregate, decimals, staleCheck (0 | 1), staleDelay (minutes),
+ *                       rule, ruleCount, valueTrue, valueFalse,
  *                       members: [{eqLogic_id, info_id, operator, value} | {type: "scenario", scenario_id, scenarioState}]}
  *                      => info "status::<id>" : valueTrue (défaut "ok") si la règle est respectée
  *                         (rule : "all" tous, "any" au moins un, "atleast" au moins ruleCount), sinon valueFalse (défaut "ko")
@@ -31,6 +32,9 @@ require_once __DIR__ . '/../../../../core/php/core.inc.php';
  *                         (ex. On, puis Luminosité 80, puis Couleur)
  */
 class groupir extends eqLogic {
+
+  /* Personnalisation de l'affichage du groupe conservée (sinon désactivée par le core, le plugin ayant son propre toHtml) */
+  public static $_widgetPossibility = array('custom' => true);
 
   /*     * ***********************Méthodes statiques*************************** */
 
@@ -90,11 +94,73 @@ class groupir extends eqLogic {
     return false;
   }
 
+  /** Calculs proposés pour une commande info numérique. */
+  const AGGREGATES = array('avg', 'max', 'min', 'sum', 'median', 'count', 'rule');
+
+  /** Calculs qui portent sur les valeurs des lignes (sans condition ni règle). */
+  const VALUE_AGGREGATES = array('avg', 'max', 'min', 'sum', 'median');
+
+  /**
+   * Type de valeur d'une commande info du groupe : "binary", "numeric" ou "string" (Autre).
+   * Groupes enregistrés avant ce choix : binaire si les valeurs sont 1 / 0, numérique si ce sont des nombres, texte sinon.
+   */
+  public static function infoSubType($_command) {
+    $subType = $_command['subType'] ?? '';
+    if (in_array($subType, array('binary', 'numeric', 'string'))) {
+      return $subType;
+    }
+    $valueTrue = trim((string) ($_command['valueTrue'] ?? ''));
+    $valueFalse = trim((string) ($_command['valueFalse'] ?? ''));
+    if ($valueTrue === '1' && $valueFalse === '0') {
+      return 'binary';
+    }
+    return (is_numeric($valueTrue) && is_numeric($valueFalse)) ? 'numeric' : 'string';
+  }
+
+  /**
+   * Calcul d'une commande info numérique : moyenne, plus haut, plus bas, somme, médiane,
+   * nombre de correspondances ou valeurs "alors / sinon" selon la règle.
+   * Groupes enregistrés avant ce choix : selon la règle (comportement d'origine).
+   */
+  public static function infoAggregate($_command) {
+    $aggregate = $_command['aggregate'] ?? '';
+    if (in_array($aggregate, self::AGGREGATES)) {
+      return $aggregate;
+    }
+    return isset($_command['subType']) ? 'avg' : 'rule';
+  }
+
+  /** Délai (minutes) de la vérification de fraîcheur d'une commande info, 0 si l'option n'est pas activée. */
+  public static function staleDelay($_command) {
+    if (empty($_command['staleCheck'])) {
+      return 0;
+    }
+    return max(1, intval($_command['staleDelay'] ?? 60));
+  }
+
+  /** La commande info renvoie-t-elle "alors / sinon" selon la règle (et non un calcul sur les valeurs) ? */
+  public static function usesRule($_command) {
+    return self::infoSubType($_command) != 'numeric' || self::infoAggregate($_command) == 'rule';
+  }
+
   /*     * *********************Méthodes d'instance************************* */
 
   /** Commandes du groupe (configuration "commands"). */
   public function getGroupCommands() {
     return $this->getArrayConfiguration('commands');
+  }
+
+  /** Une commande du groupe est-elle activée (option "enabled", activée par défaut) ? */
+  public static function isCommandEnabled($_command) {
+    return !isset($_command['enabled']) || $_command['enabled'] == 1;
+  }
+
+  /**
+   * Commandes activées : seules calculées, écoutées, affichées dans le widget et exécutables.
+   * Une commande désactivée garde sa commande Jeedom (historique, scénarios) mais n'est plus mise à jour.
+   */
+  public function getActiveCommands() {
+    return array_values(array_filter($this->getGroupCommands(), array(__CLASS__, 'isCommandEnabled')));
   }
 
   /** Vérifie les commandes d'un groupe : nom obligatoire et unique, identifiant stable, valeurs par défaut. */
@@ -119,13 +185,33 @@ class groupir extends eqLogic {
         $command['id'] = uniqid();
       }
       $command['type'] = (($command['type'] ?? '') == 'action') ? 'action' : 'info';
+      $command['enabled'] = self::isCommandEnabled($command) ? 1 : 0;
       if ($command['type'] == 'info') {
-        foreach (array('valueTrue' => 'ok', 'valueFalse' => 'ko') as $field => $default) {
-          $command[$field] = trim($command[$field] ?? '');
+        $command['aggregate'] = self::infoAggregate($command);
+        $command['subType'] = self::infoSubType($command);
+        if ($command['subType'] == 'numeric') {
+          $command['decimals'] = max(0, min(6, intval($command['decimals'] ?? 2)));
+        } else {
+          unset($command['aggregate'], $command['decimals']);
+        }
+        $defaults = array(
+          'binary' => array('valueTrue' => '1', 'valueFalse' => '0'),
+          'numeric' => array('valueTrue' => '1', 'valueFalse' => '0'),
+          'string' => array('valueTrue' => 'on', 'valueFalse' => 'off'),
+        );
+        foreach ($defaults[$command['subType']] as $field => $default) {
+          // Binaire : toujours 1 / 0, comme les commandes info binaires de Jeedom ; calcul numérique : valeurs inutilisées
+          $command[$field] = ($command['subType'] == 'binary' || !self::usesRule($command)) ? '' : trim((string) ($command[$field] ?? ''));
           if ($command[$field] == '') {
             $command[$field] = $default;
           }
+          if ($command['subType'] == 'numeric' && !is_numeric($command[$field])) {
+            throw new Exception(__('Commande', __FILE__) . ' « ' . $command['name'] . ' » : ' . __('une commande numérique doit renvoyer des nombres', __FILE__) . ' (' . $command[$field] . ')');
+          }
         }
+        // Vérification de la fraîcheur des données (option de la commande) : équipements sans mise à jour depuis staleDelay minutes ignorés
+        $command['staleCheck'] = empty($command['staleCheck']) ? 0 : 1;
+        $command['staleDelay'] = max(1, intval($command['staleDelay'] ?? 60));
         $command['rule'] = in_array($command['rule'] ?? '', array('all', 'any', 'atleast')) ? $command['rule'] : 'all';
         $command['ruleCount'] = max(1, intval($command['ruleCount'] ?? 1));
         unset($command['pause']);
@@ -133,7 +219,7 @@ class groupir extends eqLogic {
         // Pause entre deux actions : 0 à 30 secondes
         $pause = floatval(str_replace(',', '.', (string) ($command['pause'] ?? 0)));
         $command['pause'] = max(0, min(30, $pause));
-        unset($command['valueTrue'], $command['valueFalse'], $command['rule'], $command['ruleCount']);
+        unset($command['valueTrue'], $command['valueFalse'], $command['rule'], $command['ruleCount'], $command['subType'], $command['aggregate'], $command['decimals'], $command['staleCheck'], $command['staleDelay']);
       }
       $command['members'] = $this->normalizeMembers($command);
       $commands[] = $command;
@@ -182,12 +268,13 @@ class groupir extends eqLogic {
       if (!is_object(eqLogic::byId($eqId))) {
         throw new Exception($where . __('l\'équipement a été supprimé, choisissez-en un autre ou retirez la ligne', __FILE__));
       }
-      if (in_array($eqId, $seen)) {
-        throw new Exception($where . __('cet équipement est déjà présent dans la commande', __FILE__));
-      }
-      $seen[] = $eqId;
       if (!$isAction) {
+        // Commande info : un même équipement peut revenir sur plusieurs lignes, mais pas la même commande info
         $this->checkMemberCmd($where, $eqId, $member['info_id'] ?? '', 'info');
+        if (in_array('info:' . $member['info_id'], $seen)) {
+          throw new Exception($where . __('cette commande info est déjà présente dans la commande', __FILE__));
+        }
+        $seen[] = 'info:' . $member['info_id'];
         $operator = $member['operator'] ?? '==';
         $members[] = array(
           'eqLogic_id' => $eqId,
@@ -197,6 +284,11 @@ class groupir extends eqLogic {
         );
         continue;
       }
+      // Commande action : un équipement par ligne (ses actions s'enchaînent dans la ligne)
+      if (in_array($eqId, $seen)) {
+        throw new Exception($where . __('cet équipement est déjà présent dans la commande', __FILE__));
+      }
+      $seen[] = $eqId;
       $list = (isset($member['actions']) && is_array($member['actions'])) ? $member['actions'] : array($member);
       $actions = array();
       foreach (array_values($list) as $k => $action) {
@@ -233,9 +325,7 @@ class groupir extends eqLogic {
       if (($command['type'] ?? 'info') == 'action') {
         $expected['action::' . $command['id']] = array($command['name'], 'action', 'other');
       } else {
-        // Numérique si les deux valeurs le sont (ex. 1 / 0), texte sinon
-        $numeric = is_numeric($command['valueTrue'] ?? 'ok') && is_numeric($command['valueFalse'] ?? 'ko');
-        $expected['status::' . $command['id']] = array($command['name'], 'info', $numeric ? 'numeric' : 'string');
+        $expected['status::' . $command['id']] = array($command['name'], 'info', self::infoSubType($command));
       }
     }
     // Supprime d'abord les commandes retirées (ou changées de type), pour libérer leur nom avant de créer les nouvelles
@@ -260,6 +350,7 @@ class groupir extends eqLogic {
       }
       $order++;
     }
+    $this->applyNumericUnits();
     // Infos couleur des lumières résolues une fois ici (et non à chaque rafraîchissement)
     $colorCmds = array();
     foreach ($this->colorStateCmds() as $eqId => $info) {
@@ -269,6 +360,33 @@ class groupir extends eqLogic {
     $this->setCache('state', null);
     $this->refreshState();
     $this->updateListener();
+  }
+
+  /**
+   * Calcul numérique (moyenne, plus haut...) : reprend l'unité de la première info des lignes (ex. °C)
+   * si la commande du groupe n'en a pas encore (modifiable ensuite dans sa configuration).
+   */
+  private function applyNumericUnits() {
+    foreach ($this->getGroupCommands() as $command) {
+      if (($command['type'] ?? 'info') == 'action' || self::infoSubType($command) != 'numeric'
+        || !in_array(self::infoAggregate($command), self::VALUE_AGGREGATES)) {
+        continue;
+      }
+      $cmd = $this->getCmd('info', 'status::' . $command['id']);
+      if (!is_object($cmd) || trim((string) $cmd->getUnite()) !== '') {
+        continue;
+      }
+      foreach ($command['members'] ?? array() as $member) {
+        $infoId = self::memberCmdId($member, 'info');
+        $info = ($infoId === null) ? null : cmd::byId($infoId);
+        $unit = is_object($info) ? trim((string) $info->getUnite()) : '';
+        if ($unit !== '') {
+          $cmd->setUnite($unit);
+          $cmd->save();
+          break;
+        }
+      }
+    }
   }
 
   public function preRemove() {
@@ -302,7 +420,7 @@ class groupir extends eqLogic {
   /** Commandes info des membres à surveiller. */
   private function getWatchedCmdIds() {
     $candidates = array();
-    foreach ($this->getGroupCommands() as $command) {
+    foreach ($this->getActiveCommands() as $command) {
       if (($command['type'] ?? 'info') == 'action') {
         continue;
       }
@@ -375,16 +493,23 @@ class groupir extends eqLogic {
   }
 
   /**
-   * Nombre de correspondances vraies et nombre total pour une commande info du groupe.
-   * @return array [vraies, total]
+   * Nombre de correspondances vraies, nombre total et valeurs numériques des lignes pour une commande info du groupe.
+   * Un scénario compte pour 1 s'il est dans l'état choisi, 0 sinon.
+   * Avec staleDelay, une ligne dont l'équipement n'a pas été mis à jour depuis ce délai (ou est en timeout) est ignorée.
+   * @return array [vraies, total, [valeurs numériques], [équipements ignorés]]
    */
   public function stateMatchCount($_state) {
     $total = 0;
     $matches = 0;
+    $numbers = array();
+    $stale = array();
+    $staleDelay = self::staleDelay($_state);
     foreach ($_state['members'] ?? array() as $member) {
       if (($member['type'] ?? '') == 'scenario') {
         $total++;
-        if ($this->isScenarioInState($member['scenario_id'] ?? '', $member['scenarioState'] ?? 'active')) {
+        $inState = $this->isScenarioInState($member['scenario_id'] ?? '', $member['scenarioState'] ?? 'active');
+        $numbers[] = $inState ? 1 : 0;
+        if ($inState) {
           $matches++;
         }
         continue;
@@ -393,18 +518,123 @@ class groupir extends eqLogic {
       if ($cmdId === null) {
         continue; // ligne sans commande info choisie
       }
-      $total++;
       $cmd = cmd::byId($cmdId);
       if (!is_object($cmd)) {
+        $total++;
         log::add(__CLASS__, 'warning', '[' . $this->getHumanName() . '] ' . __('Commande info introuvable (supprimée ?)', __FILE__) . ' : ' . $cmdId . ' — ' . __('ouvrez le groupe pour corriger la ligne', __FILE__));
         continue;
       }
+      if ($staleDelay > 0) {
+        $staleReason = self::staleReason($cmd, $staleDelay);
+        if ($staleReason !== null) {
+          $stale[] = $staleReason;
+          continue; // valeur ignorée : ni dans le total, ni dans le calcul
+        }
+      }
+      $total++;
+      $current = $cmd->execCmd();
+      if (is_numeric($current)) {
+        $numbers[] = floatval($current);
+      }
       $operator = ($member['operator'] ?? '') == '' ? '==' : $member['operator'];
-      if (self::compare($cmd->execCmd(), $operator, self::resolveValue($member['value'] ?? ''))) {
+      if (self::compare($current, $operator, self::resolveValue($member['value'] ?? ''))) {
         $matches++;
       }
     }
-    return array($matches, $total);
+    return array($matches, $total, $numbers, $stale);
+  }
+
+  /**
+   * Défaillance d'une info : équipement en timeout (Jeedom) ou sans mise à jour depuis $_delay minutes.
+   * La dernière mise à jour est la plus récente entre la dernière communication de l'équipement et la date de la valeur.
+   * @return string|null "Équipement (dernière mise à jour : date)" si l'info est à ignorer, null sinon
+   */
+  private static function staleReason($_cmd, $_delay) {
+    $eqLogic = $_cmd->getEqLogic();
+    $name = is_object($eqLogic) ? $eqLogic->getHumanName() : $_cmd->getHumanName();
+    $last = 0;
+    foreach (array(is_object($eqLogic) ? $eqLogic->getStatus('lastCommunication') : '', $_cmd->getValueDate(), $_cmd->getCollectDate()) as $date) {
+      $time = strtotime((string) $date);
+      if ($time !== false && $time > $last) {
+        $last = $time;
+      }
+    }
+    $lastText = ($last > 0) ? date('Y-m-d H:i', $last) : __('jamais', __FILE__);
+    if (is_object($eqLogic) && $eqLogic->getStatus('timeout', 0) == 1) {
+      return $name . ' (' . __('timeout', __FILE__) . ', ' . __('dernière mise à jour', __FILE__) . ' : ' . $lastText . ')';
+    }
+    if ($last == 0 || (time() - $last) > $_delay * 60) {
+      return $name . ' (' . __('dernière mise à jour', __FILE__) . ' : ' . $lastText . ')';
+    }
+    return null;
+  }
+
+  /**
+   * Valeur et affichage d'une commande info du groupe à partir de stateMatchCount().
+   * @return array ['value' => valeur de la commande, 'status' => classe du widget, 'count' => compteur, 'title' => infobulle]
+   */
+  public static function commandResult($_command, $_count) {
+    $result = self::computeResult($_command, $_count);
+    $stale = $_count[3] ?? array();
+    $result['stale'] = (count($stale) == 0) ? '' : __('Ignorés, pas de mise à jour récente', __FILE__) . ' : ' . implode(', ', $stale);
+    if ($result['stale'] !== '') {
+      $result['title'] .= ' — ' . $result['stale'];
+    }
+    return $result;
+  }
+
+  private static function computeResult($_command, $_count) {
+    $matches = $_count[0] ?? 0;
+    $total = $_count[1] ?? 0;
+    $numbers = $_count[2] ?? array();
+    $ratio = ($total == 0) ? '' : $matches . '/' . $total;
+    $ratioTitle = ($total == 0) ? __('Aucun équipement', __FILE__) : $ratio . ' ' . __('équipements conformes', __FILE__);
+    if (!self::usesRule($_command)) {
+      $aggregate = self::infoAggregate($_command);
+      if ($aggregate == 'count') {
+        return array('value' => ($total == 0) ? '' : $matches, 'status' => ($total == 0) ? 'is-none' : 'is-value', 'count' => $ratio, 'title' => $ratioTitle);
+      }
+      if (count($numbers) == 0) {
+        return array('value' => '', 'status' => 'is-none', 'count' => '', 'title' => __('Aucune valeur numérique', __FILE__));
+      }
+      sort($numbers);
+      $n = count($numbers);
+      switch ($aggregate) {
+        case 'max':
+          $value = $numbers[$n - 1];
+          $label = __('Plus haut', __FILE__);
+          break;
+        case 'min':
+          $value = $numbers[0];
+          $label = __('Plus bas', __FILE__);
+          break;
+        case 'sum':
+          $value = array_sum($numbers);
+          $label = __('Somme', __FILE__);
+          break;
+        case 'median':
+          $value = ($n % 2) ? $numbers[intdiv($n, 2)] : ($numbers[$n / 2 - 1] + $numbers[$n / 2]) / 2;
+          $label = __('Médiane', __FILE__);
+          break;
+        default:
+          $value = array_sum($numbers) / $n;
+          $label = __('Moyenne', __FILE__);
+      }
+      $value = round($value, max(0, min(6, intval($_command['decimals'] ?? 2))));
+      return array('value' => $value, 'status' => 'is-value', 'count' => (string) $n, 'title' => $label . ' ' . __('de', __FILE__) . ' ' . $n . ' ' . __('valeurs', __FILE__));
+    }
+    $matched = self::ruleMatched($_command, $matches, $total);
+    if ($matched === null) {
+      return array('value' => '', 'status' => 'is-none', 'count' => '', 'title' => $ratioTitle);
+    }
+    $defaultTrue = (self::infoSubType($_command) == 'string') ? 'on' : '1';
+    $defaultFalse = (self::infoSubType($_command) == 'string') ? 'off' : '0';
+    return array(
+      'value' => $matched ? ($_command['valueTrue'] ?? $defaultTrue) : ($_command['valueFalse'] ?? $defaultFalse),
+      'status' => $matched ? 'is-ok' : 'is-ko',
+      'count' => $ratio,
+      'title' => $ratioTitle,
+    );
   }
 
   /** État d'un scénario : "active", "inactive", "running" (en cours) ou "stopped" (arrêté). */
@@ -429,7 +659,7 @@ class groupir extends eqLogic {
 
   /** Le groupe a-t-il des scénarios dans ses commandes info (leur état n'émet pas d'événement : rafraîchi par le cron) ? */
   private function hasScenarioInfo() {
-    foreach ($this->getGroupCommands() as $command) {
+    foreach ($this->getActiveCommands() as $command) {
       if (($command['type'] ?? 'info') == 'action') {
         continue;
       }
@@ -442,10 +672,20 @@ class groupir extends eqLogic {
     return false;
   }
 
-  /** Chaque minute : recalcule les groupes dont une commande info dépend de l'état de scénarios. */
+  /** Le groupe surveille-t-il la fraîcheur des données (une sonde muette n'émet plus d'événement) ? */
+  private function hasStaleCheck() {
+    foreach ($this->getActiveCommands() as $command) {
+      if (($command['type'] ?? 'info') != 'action' && self::staleDelay($command) > 0) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  /** Chaque minute : recalcule les groupes qui dépendent de l'état de scénarios ou de la fraîcheur des données. */
   public static function cron() {
     foreach (self::byType(__CLASS__, true) as $eqLogic) {
-      if ($eqLogic->hasScenarioInfo()) {
+      if ($eqLogic->hasScenarioInfo() || $eqLogic->hasStaleCheck()) {
         $eqLogic->refreshState();
       }
     }
@@ -458,14 +698,13 @@ class groupir extends eqLogic {
   public function refreshState($_eventCmdId = null) {
     $previous = $this->getCache('state', null);
     $state = $this->computeState($_eventCmdId, $previous);
-    foreach ($this->getGroupCommands() as $command) {
+    foreach ($this->getActiveCommands() as $command) {
       if (($command['type'] ?? 'info') == 'action' || !isset($state['counts'][$command['id']])) {
         continue;
       }
-      list($matches, $total) = $state['counts'][$command['id']];
-      $matched = self::ruleMatched($command, $matches, $total);
-      $value = ($matched === null) ? '' : ($matched ? ($command['valueTrue'] ?? 'ok') : ($command['valueFalse'] ?? 'ko'));
-      $this->checkAndUpdateCmd('status::' . $command['id'], $value);
+      $result = self::commandResult($command, $state['counts'][$command['id']]);
+      $this->checkAndUpdateCmd('status::' . $command['id'], $result['value']);
+      $this->logStaleChanges($command, $previous['counts'][$command['id']][3] ?? array(), $state['counts'][$command['id']][3] ?? array());
     }
     // Widget mis à jour en direct (pastilles, compteurs, couleurs), seulement si quelque chose a changé
     $changed = ($state !== $previous);
@@ -479,6 +718,23 @@ class groupir extends eqLogic {
     }
   }
 
+  /** Journalise une défaillance (équipement ignoré) quand elle apparaît, et son retour à la normale. */
+  private function logStaleChanges($_command, $_before, $_after) {
+    $name = function ($_reason) {
+      return preg_replace('/ \(.*$/', '', $_reason);
+    };
+    $before = array_map($name, $_before);
+    $after = array_map($name, $_after);
+    foreach ($_after as $reason) {
+      if (!in_array($name($reason), $before)) {
+        log::add(__CLASS__, 'warning', '[' . $this->getHumanName() . '][' . $_command['name'] . '] ' . __('Défaillance, valeur ignorée', __FILE__) . ' : ' . $reason);
+      }
+    }
+    foreach (array_diff($before, $after) as $eqName) {
+      log::add(__CLASS__, 'info', '[' . $this->getHumanName() . '][' . $_command['name'] . '] ' . __('De nouveau à jour', __FILE__) . ' : ' . $eqName);
+    }
+  }
+
   /*     * *********************Widget************************* */
 
   /**
@@ -489,7 +745,7 @@ class groupir extends eqLogic {
   private function colorStateCmds() {
     $eqIds = array();
     $linked = array();
-    foreach ($this->getGroupCommands() as $command) {
+    foreach ($this->getActiveCommands() as $command) {
       foreach ($command['members'] ?? array() as $member) {
         $eqId = $member['eqLogic_id'] ?? '';
         if (!is_numeric($eqId) || $eqId == $this->getId()) {
@@ -597,7 +853,7 @@ class groupir extends eqLogic {
     $previous = is_array($_previous) ? $_previous : array();
     $partial = ($_eventCmdId !== null && isset($previous['counts'], $previous['colors']));
     $counts = array();
-    foreach ($this->getGroupCommands() as $command) {
+    foreach ($this->getActiveCommands() as $command) {
       if (($command['type'] ?? 'info') == 'action') {
         continue;
       }
@@ -619,7 +875,7 @@ class groupir extends eqLogic {
   /** Données du widget pour une mise à jour en direct (sans le régénérer). */
   private function widgetPayload($_state) {
     $infos = array();
-    foreach ($this->getGroupCommands() as $command) {
+    foreach ($this->getActiveCommands() as $command) {
       if (($command['type'] ?? 'info') == 'action' || !isset($_state['counts'][$command['id']])) {
         continue;
       }
@@ -627,14 +883,14 @@ class groupir extends eqLogic {
       if (!is_object($cmd)) {
         continue;
       }
-      list($matches, $total) = $_state['counts'][$command['id']];
-      $matched = self::ruleMatched($command, $matches, $total);
+      $result = self::commandResult($command, $_state['counts'][$command['id']]);
       $infos[] = array(
         'cmd_id' => $cmd->getId(),
-        'status' => ($matched === null) ? 'is-none' : ($matched ? 'is-ok' : 'is-ko'),
-        'count' => ($total == 0) ? '' : $matches . '/' . $total,
-        'title' => ($total == 0) ? __('Aucun équipement', __FILE__) : $matches . '/' . $total . ' ' . __('équipements conformes', __FILE__),
-        'value' => (string) $cmd->execCmd(),
+        'status' => $result['status'],
+        'count' => $result['count'],
+        'title' => $result['title'],
+        'stale' => $result['stale'],
+        'value' => self::displayValue($cmd),
       );
     }
     $colors = array();
@@ -642,6 +898,19 @@ class groupir extends eqLogic {
       $colors[] = array('name' => $color[0], 'color' => $color[1]);
     }
     return array('eqLogic_id' => $this->getId(), 'infos' => $infos, 'colors' => $colors);
+  }
+
+  /** Valeur actuelle des commandes info du groupe, pour l'éditeur (en-têtes des commandes pliées) : [{cmd_id, status, title, stale, value}] */
+  public function getInfoValues() {
+    $payload = $this->widgetPayload($this->getState());
+    return $payload['infos'];
+  }
+
+  /** Valeur affichée dans le widget : valeur de la commande suivie de son unité. */
+  private static function displayValue($_cmd) {
+    $value = (string) $_cmd->execCmd();
+    $unit = trim((string) $_cmd->getUnite());
+    return ($value === '' || $unit === '') ? $value : $value . ' ' . $unit;
   }
 
   public function toHtml($_version = 'dashboard') {
@@ -655,7 +924,7 @@ class groupir extends eqLogic {
     $infos = '';
     $actions = '';
     $state = $this->getState();
-    foreach ($this->getGroupCommands() as $command) {
+    foreach ($this->getActiveCommands() as $command) {
       $isAction = ($command['type'] ?? 'info') == 'action';
       $cmd = $this->getCmd(null, ($isAction ? 'action::' : 'status::') . $command['id']);
       if (!is_object($cmd) || $cmd->getIsVisible() != 1) {
@@ -666,15 +935,13 @@ class groupir extends eqLogic {
         $actions .= '<a class="btn btn-sm gw-action" data-groupir-cmd="' . $cmd->getId() . '" title="' . $name . '">' . $name . '</a>';
         continue;
       }
-      list($matches, $total) = $state['counts'][$command['id']] ?? $this->stateMatchCount($command);
-      $value = (string) $cmd->execCmd();
-      $matched = self::ruleMatched($command, $matches, $total);
-      $status = ($matched === null) ? 'is-none' : ($matched ? 'is-ok' : 'is-ko');
-      $title = $total == 0 ? __('Aucun équipement', __FILE__) : $matches . '/' . $total . ' ' . __('équipements conformes', __FILE__);
-      $infos .= '<div class="gw-info ' . $status . '" data-cmd_id="' . $cmd->getId() . '" title="' . htmlspecialchars($title) . '">';
+      $result = self::commandResult($command, $state['counts'][$command['id']] ?? $this->stateMatchCount($command));
+      $value = self::displayValue($cmd);
+      $infos .= '<div class="gw-info ' . $result['status'] . '" data-cmd_id="' . $cmd->getId() . '" title="' . htmlspecialchars($result['title']) . '">';
       $infos .= '<span class="gw-dot"></span>';
       $infos .= '<span class="gw-info-name">' . $name . '</span>';
-      $infos .= '<span class="gw-info-count">' . ($total == 0 ? '' : $matches . '/' . $total) . '</span>';
+      $infos .= '<span class="gw-info-count">' . htmlspecialchars($result['count']) . '</span>';
+      $infos .= '<span class="gw-warn" title="' . htmlspecialchars($result['stale']) . '"' . ($result['stale'] === '' ? ' style="display:none;"' : '') . '><i class="fas fa-exclamation-triangle"></i></span>';
       $infos .= '<span class="gw-pill">' . ($value === '' ? '-' : htmlspecialchars($value)) . '</span>';
       $infos .= '</div>';
     }
@@ -710,6 +977,10 @@ class groupir extends eqLogic {
     foreach ($this->getGroupCommands() as $command) {
       if ($command['id'] != $_commandId || ($command['type'] ?? 'info') != 'action') {
         continue;
+      }
+      if (!self::isCommandEnabled($command)) {
+        log::add(__CLASS__, 'info', '[' . $this->getHumanName() . '] ' . __('Commande désactivée, rien n\'est exécuté', __FILE__) . ' : ' . $command['name']);
+        return false;
       }
       log::add(__CLASS__, 'info', '[' . $this->getHumanName() . '] ' . __('Exécution de', __FILE__) . ' ' . $command['name']);
       // Pause optionnelle entre deux actions (ex. certaines ampoules ignorent une couleur envoyée juste après l'allumage)
@@ -773,6 +1044,10 @@ class groupir extends eqLogic {
     );
     $piloted = array();
     foreach ($this->getGroupCommands() as $command) {
+      // Seules les commandes action pilotent un scénario (une commande info ne fait que surveiller son état)
+      if (($command['type'] ?? 'info') != 'action') {
+        continue;
+      }
       foreach ($command['members'] ?? array() as $member) {
         if (($member['type'] ?? '') != 'scenario') {
           continue;
@@ -882,6 +1157,9 @@ class groupir extends eqLogic {
 }
 
 class groupirCmd extends cmd {
+
+  /* Le widget du groupe est dessiné par le plugin : les réglages d'affichage des commandes (onglet Affichage) n'ont pas d'effet, on le masque */
+  public static $_widgetPossibility = array('custom' => false);
 
   /* Les commandes sont gérées par le plugin, on ne les supprime jamais depuis l'interface */
   public function dontRemoveCmd() {

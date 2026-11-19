@@ -2,18 +2,23 @@
 
 Groupir regroupe des équipements (et des scénarios) Jeedom. Chaque groupe, par exemple « Lumières salon », devient un équipement avec ses propres commandes :
 
-- des **commandes info**, qui indiquent si les équipements sont dans l'état attendu (ex. `on` vaut `ok` si toutes les lumières sont allumées, sinon `ko`, valeurs personnalisables) ;
+- des **commandes info**, qui donnent l'état du groupe : binaire (ex. `on` vaut `1` si toutes les lumières sont allumées), numérique (ex. température moyenne des pièces) ou texte (ex. `on` / `off`, valeurs personnalisables) ;
 - des **commandes action**, qui pilotent tous les équipements d'un coup (ex. `Allumer` allume les lumières, règle leur luminosité et leur couleur).
 
 Ces commandes s'utilisent comme n'importe quelle commande Jeedom : scénarios, widgets, historique, alertes...
 
 ## Fonctionnalités
 
-- Commandes info avec une règle au choix : tous, au moins un ou au moins N équipements conformes
-- Conditions variées : égal, différent, supérieur, inférieur, contient...
+- Commandes info de type **Binaire**, **Numérique** ou **Autre** (texte), comme dans Jeedom ; le type est proposé automatiquement d'après les commandes choisies
+- Règle au choix : tous, au moins un ou au moins N équipements conformes ; conditions variées : égal, différent, supérieur, inférieur, contient...
+- Calculs numériques : moyenne, plus haut, plus bas, somme, médiane ou nombre de correspondances, avec arrondi et unité reprise automatiquement
+- **Fraîcheur des données** : un équipement sans mise à jour récente (ex. sonde sans pile) ou en timeout est ignoré et signalé par un avertissement
+- Un même équipement peut revenir plusieurs fois dans une commande info (ex. température et humidité d'une même sonde)
+- Commandes activables / désactivables sans les supprimer
 - Commandes action enchaînant plusieurs actions par équipement (ex. On, Luminosité, Couleur), avec une pause optionnelle entre deux actions
 - Scénarios dans les groupes : état (actif, en cours...) pour les infos ; lancer, arrêter, activer, désactiver pour les actions
-- Widget dédié : état de chaque commande info, couleur actuelle des lumières, un bouton par commande action, mis à jour en direct
+- Widget dédié : valeur et état de chaque commande info, couleur actuelle des lumières, un bouton par commande action, mis à jour en direct
+- Éditeur pratique : valeur actuelle de chaque commande visible même pliée, glisser-déposer, clonage des lignes et des commandes
 - Interface en français, anglais, allemand, espagnol et italien
 
 ![Widget](docs/images/Widget.png)

@@ -53,6 +53,15 @@ try {
         ajax::success($eqLogic->getLinkedScenarios());
     }
 
+    // Valeur actuelle des commandes info du groupe (affichée dans l'en-tête de chaque commande)
+    if (init('action') == 'getInfoValues') {
+        $eqLogic = groupir::byId(init('id'));
+        if (!is_object($eqLogic)) {
+            throw new Exception(__('Groupe introuvable', __FILE__) . ' : ' . init('id'));
+        }
+        ajax::success($eqLogic->getInfoValues());
+    }
+
     // Liste des scénarios (pour les commandes action du groupe)
     if (init('action') == 'getScenarios') {
         $list = array();

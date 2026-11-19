@@ -8,6 +8,13 @@ lang: fr_FR
 # 19/11/2026 - 1.0.0
 
 - Première version publiée sur le Market Jeedom
+- Commandes info : type Binaire, Numérique ou Autre (on / off par défaut), proposé d'après les commandes info choisies
+- Numérique : moyenne, plus haut, plus bas, somme, médiane, nombre de correspondances ou selon la règle ; décimales et unité reprise automatiquement
+- Option « Vérifier la fraîcheur des données » : équipements sans mise à jour récente ou en timeout ignorés, avertissement dans le widget et dans le log
+- Commande info : un même équipement peut revenir sur plusieurs lignes (pas la même commande info)
+- Commandes activables / désactivables
+- Éditeur : valeur actuelle dans l'en-tête des commandes, nom du groupe rappelé, scénarios dans un bloc séparé (info), clonage des lignes scénario
+- Onglet Affichage masqué dans la configuration des commandes (sans effet sur le widget du groupe)
 - Retrait de la partie « Développement » de la configuration du plugin
 - Nettoyage du code
 - Interface traduite en anglais, allemand, espagnol et italien

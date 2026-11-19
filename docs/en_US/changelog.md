@@ -8,6 +8,13 @@ lang: en_US
 # 19/11/2026 - 1.0.0
 
 - First release on the Jeedom Market
+- Info commands: Binary, Numeric or Other type (on / off by default), suggested from the selected info commands
+- Numeric: average, highest, lowest, sum, median, number of matches or according to the rule; decimals and unit reused automatically
+- "Check data freshness" option: devices without recent update or in timeout are ignored, with a warning in the widget and in the log
+- Info command: the same device can appear on several lines (not the same info command)
+- Commands can be enabled / disabled
+- Editor: current value in the command header, group name shown, scenarios in a separate block (info), scenario lines can be cloned
+- Display tab hidden in the command configuration (no effect on the group widget)
 - Removed the "Development" section from the plugin configuration
 - Code cleanup
 - Interface translated into English, German, Spanish and Italian

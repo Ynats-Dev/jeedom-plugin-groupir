@@ -3,11 +3,11 @@
 	"name": "Groupir",
 	"pluginVersion": "1.0.0",
 	"description": {
-		"fr_FR": "Regroupez vos équipements : chaque groupe expose des commandes info (ex. « on » vaut ok si toutes les ampoules sont allumées) et des commandes action (ex. « Allumer » pilote toutes les ampoules).",
-		"en_US": "Group your devices: each group exposes info commands (e.g. \"on\" is ok when all the bulbs are on) and action commands (e.g. \"Turn on\" controls all the bulbs).",
-		"de_DE": "Gruppieren Sie Ihre Geräte: Jede Gruppe stellt Info-Befehle (z. B. „on\" ist ok, wenn alle Lampen eingeschaltet sind) und Aktionsbefehle bereit (z. B. „Einschalten\" steuert alle Lampen).",
-		"es_ES": "Agrupe sus equipos: cada grupo expone comandos info (ej. «on» vale ok si todas las bombillas están encendidas) y comandos acción (ej. «Encender» controla todas las bombillas).",
-		"it_IT": "Raggruppa i tuoi dispositivi: ogni gruppo espone comandi info (es. «on» vale ok se tutte le lampadine sono accese) e comandi azione (es. «Accendi» controlla tutte le lampadine)."
+		"fr_FR": "Regroupez vos équipements et scénarios : chaque groupe expose des commandes info (ex. « on » vaut 1 si toutes les ampoules sont allumées, ou la température moyenne de la maison) et des commandes action (ex. « Allumer » pilote toutes les ampoules). Types binaire, numérique (moyenne, plus haut, plus bas, somme, médiane) ou texte, et détection des sondes qui ne remontent plus de données.",
+		"en_US": "Group your devices and scenarios: each group exposes info commands (e.g. \"on\" is 1 when all the bulbs are on, or the average temperature of the house) and action commands (e.g. \"Turn on\" controls all the bulbs). Binary, numeric (average, highest, lowest, sum, median) or text types, and detection of sensors that no longer report data.",
+		"de_DE": "Gruppieren Sie Ihre Geräte und Szenarien: Jede Gruppe stellt Info-Befehle (z. B. „on“ ist 1, wenn alle Lampen eingeschaltet sind, oder die Durchschnittstemperatur des Hauses) und Aktionsbefehle bereit (z. B. „Einschalten“ steuert alle Lampen). Typen binär, numerisch (Durchschnitt, höchster, niedrigster Wert, Summe, Median) oder Text sowie Erkennung von Sensoren, die keine Daten mehr liefern.",
+		"es_ES": "Agrupe sus equipos y escenarios: cada grupo expone comandos info (ej. «on» vale 1 si todas las bombillas están encendidas, o la temperatura media de la casa) y comandos acción (ej. «Encender» controla todas las bombillas). Tipos binario, numérico (media, más alto, más bajo, suma, mediana) o texto, y detección de las sondas que ya no envían datos.",
+		"it_IT": "Raggruppa i tuoi dispositivi e scenari: ogni gruppo espone comandi info (es. «on» vale 1 se tutte le lampadine sono accese, o la temperatura media della casa) e comandi azione (es. «Accendi» controlla tutte le lampadine). Tipi binario, numerico (media, più alto, più basso, somma, mediana) o testo, e rilevamento delle sonde che non inviano più dati."
 	},
 	"licence": "AGPL",
 	"author": "Ynats",
