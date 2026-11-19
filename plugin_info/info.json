@@ -16,8 +16,8 @@
 	"hasDependency": false,
 	"hasOwnDeamon": false,
 	"maxDependancyInstallTime": 0,
-	"changelog": "",
-	"documentation": "",
+	"changelog": "https://github.com/Ynats-Dev/jeedom-plugin-groupir/blob/stable/docs/#language#/changelog.md",
+	"documentation": "https://github.com/Ynats-Dev/jeedom-plugin-groupir/blob/stable/docs/#language#/index.md",
 	"link": {
 		"forum": "https://community.jeedom.com/tag/plugin-groupir"
 	},
