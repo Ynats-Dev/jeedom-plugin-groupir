@@ -494,7 +494,8 @@ a.groupir-linked-item > i {
   }
 }
 
-#grouptab .gr-state-header .bt_grConfigureCmd.gr-disabled {
+#grouptab .gr-state-header .bt_grConfigureCmd.gr-disabled,
+#grouptab .gr-state-header .bt_grTestCmd.gr-disabled {
   opacity: 0.45;
 }
 

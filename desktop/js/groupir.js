@@ -76,7 +76,7 @@ function grApplyCmdIds() {
     var id = String(init($(this).find('.grStateAttr[data-l1key=id]').val()))
     var logicalId = ($(this).attr('data-type') == 'action' ? 'action::' : 'status::') + id
     var cmdId = (id != '') ? grCmdIdsByLogical[logicalId] : undefined
-    var button = $(this).find('.bt_grConfigureCmd')
+    var button = $(this).find('.bt_grConfigureCmd, .bt_grTestCmd')
     button.attr('data-cmd_id', init(cmdId)).toggleClass('gr-disabled', !cmdId)
     $(this).attr('data-cmd_id', init(cmdId))
   })
@@ -229,6 +229,9 @@ function grAddState(_state) {
   div += '<a class="btn btn-default btn-xs bt_grAddMemberScenario"><i class="fas fa-cogs"></i> {{Scénario}}</a>'
   div += '<input type="hidden" class="grStateAttr" data-l1key="enabled">'
   div += '<a class="btn btn-default btn-xs bt_grToggleEnabled"><i class="fas fa-toggle-on"></i></a>'
+  if (!isInfo) {
+    div += '<a class="btn btn-default btn-xs bt_grTestCmd" title="{{Tester cette commande}}"><i class="fas fa-rss"></i> {{Tester}}</a>'
+  }
   div += '<a class="btn btn-default btn-xs bt_grConfigureCmd" title="{{Configuration de la commande : historique, type générique, alertes, affichage}}"><i class="fas fa-cog"></i></a>'
   div += '<a class="btn btn-default btn-xs bt_grCloneState" title="{{Cloner cette commande et ses équipements}}"><i class="fas fa-clone"></i></a>'
   div += '<a class="btn btn-danger btn-xs bt_grRemoveState" title="{{Supprimer cette commande}}"><i class="fas fa-trash-alt"></i></a>'
@@ -1303,6 +1306,19 @@ $('#grouptab').off('click', '.bt_grConfigureCmd').on('click', '.bt_grConfigureCm
     return
   }
   grOpenCmdConfigure(cmdId)
+})
+
+$('#grouptab').off('click', '.bt_grTestCmd').on('click', '.bt_grTestCmd', function () {
+  var cmdId = init($(this).attr('data-cmd_id'))
+  if (cmdId == '') {
+    $('#div_alert').showAlert({ message: '{{Enregistrez le groupe pour tester cette commande.}}', level: 'warning' })
+    return
+  }
+  if (typeof jeedom.cmd.test === 'function') {
+    jeedom.cmd.test({ id: cmdId })
+  } else {
+    jeedom.cmd.execute({ id: cmdId })
+  }
 })
 
 $('#grouptab').off('click', '.bt_grCloneState').on('click', '.bt_grCloneState', function () {
