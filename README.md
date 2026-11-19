@@ -40,4 +40,4 @@ Questions et retours sur le [forum Jeedom Community](https://community.jeedom.co
 
 ## Licence
 
-[AGPL-3.0](LICENSE)
+[GPL-2.0](LICENSE)
