@@ -21,7 +21,7 @@ Ces commandes s'utilisent comme n'importe quelle commande Jeedom : scénarios, w
 - Éditeur pratique : valeur actuelle de chaque commande visible même pliée, glisser-déposer, clonage des lignes et des commandes
 - Interface en français, anglais, allemand, espagnol et italien
 
-![Widget](docs/images/Widget.png)
+![Widget](docs/fr_FR/images/widget.png)
 
 ## Installation
 

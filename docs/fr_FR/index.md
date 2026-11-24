@@ -13,7 +13,7 @@ Groupir permet de **grouper des équipements** (et des scénarios). Chaque group
 
 Ces commandes s'utilisent comme n'importe quelle commande Jeedom : scénarios, widgets, historique, alertes...
 
-![Liste des groupes](../images/Groupes.png)
+![Liste des groupes](images/groups.png)
 
 Configuration du plugin
 ===
@@ -22,7 +22,7 @@ Après l'installation depuis le Market, activez le plugin. **Aucune configuratio
 
 La fonctionnalité **cron** est active : chaque minute, le plugin recalcule les groupes dont une commande info dépend de l'état d'un scénario ou vérifie la fraîcheur des données. Le niveau de log *Debug* détaille chaque recalcul et chaque action exécutée, ce qui aide au diagnostic.
 
-![Configuration du plugin](../images/Configuration.png)
+![Configuration du plugin](images/configuration.png)
 
 L'interface est disponible en français, anglais, allemand, espagnol et italien.
 
@@ -43,7 +43,7 @@ Le bloc **Scénarios liés** liste :
 
 Un clic ouvre le scénario.
 
-![Onglet Général](../images/Groupe.General.png)
+![Onglet Général](images/general.png)
 
 Onglet « Correspondances »
 ---
@@ -53,19 +53,19 @@ Le groupe contient des **commandes**, chacune étant un sous-groupe d'équipemen
 - **Commande info** (pastille bleue) : calcule un état à partir des équipements ;
 - **Commande action** (pastille orange) : exécute des actions sur les équipements.
 
-![Onglet Correspondances](../images/Correspondances.png)
+![Onglet Correspondances](images/mappings.png)
 
 Donnez un **nom** à la commande : ce sera le nom de la commande du groupe. Ajoutez ensuite une ligne par équipement avec le bouton **Équipement** (ou par scénario avec le bouton **Scénario**). Chaque ligne se remplit de gauche à droite : **Objet**, **Équipement**, **Commande**. Chaque liste a un champ *Filtre* ; un filtre qui ne laisse qu'un résultat le sélectionne automatiquement, et dans une commande action, un équipement déjà présent n'est plus proposé. Dans une commande info, un même équipement peut revenir sur plusieurs lignes (ex. température et humidité d'une même sonde), mais une commande info déjà choisie n'est plus proposée.
 
 Le bouton **interrupteur** de l'en-tête active ou désactive une commande sans la supprimer. Une commande désactivée n'est plus calculée ni affichée dans le widget, et une commande action désactivée n'exécute plus rien. Sa commande Jeedom est conservée (historique, scénarios qui l'utilisent) et une commande info garde sa dernière valeur.
 
-![Commandes désactivées](../images/Correspondances.Desactivee.png)
+![Commandes désactivées](images/disabled.png)
 
 ### Commande info
 
 Pour chaque équipement : la commande info, une condition (*égal à*, *différent de*, *supérieur à*, *contient*...) et la **valeur attendue** (la valeur actuelle est affichée en indication).
 
-![Commande info](../images/Correspondances.Info.png)
+![Commande info](images/info.png)
 
 Le **type** de la commande se choisit comme dans Jeedom, et les options proposées en dépendent :
 
@@ -86,7 +86,7 @@ La règle (Binaire, Autre, et Numérique « selon la règle ») :
 
 **Vérifier la fraîcheur des données** (option de chaque commande info, désactivée par défaut) : une ligne dont l'équipement n'a pas été mis à jour depuis le délai choisi (60 minutes par défaut), ou que Jeedom signale en timeout, est **ignorée** : elle ne compte ni dans la règle ni dans le calcul. Exemple : une sonde de température sans pile ne fausse plus la moyenne. La dernière mise à jour retenue est la plus récente entre la dernière communication de l'équipement et la date de la valeur. Le widget affiche alors un **avertissement** (survolez-le pour la liste des équipements en défaut), et la défaillance puis le retour à la normale sont notés dans le log du plugin. Cette vérification est refaite chaque minute.
 
-![Commande numérique (moyenne) avec vérification de la fraîcheur](../images/Correspondances.Info.Numerique.png)
+![Commande numérique (moyenne) avec vérification de la fraîcheur](images/info-numeric.png)
 
 ### Commande action
 
@@ -96,7 +96,7 @@ Le champ **Valeur** s'adapte au type de la commande : nombre (avec la plage auto
 
 La **pause entre deux actions** (0 à 30 secondes) espace chaque action : utile pour les ampoules qui ignorent une couleur envoyée juste après l'allumage.
 
-![Commande action](../images/Correspondances.Action.png)
+![Commande action](images/action.png)
 
 ### Ajouter des scénarios
 
@@ -111,11 +111,11 @@ Exemple, un groupe **Alarme** :
 - commande info `etat` (type *Autre*, valeurs `on` / `off`) : une ligne scénario *0 - Alarme - Activation* **est actif** ; elle vaut `on` tant que le scénario est activé ;
 - commande action `activation` : une ligne scénario *0 - Alarme - Activation* **Lancer**, puis une ligne équipement (*Google Home Parle*) qui annonce « Alarme activée » ; scénarios et équipements s'enchaînent dans l'ordre de la liste.
 
-![Groupe Alarme : scénario dans une commande info et dans une commande action](../images/Correspondances.Scenarios.png)
+![Groupe Alarme : scénario dans une commande info et dans une commande action](images/scenarios.png)
 
 Les scénarios lancés, arrêtés, activés ou désactivés par une commande action apparaissent dans l'onglet *Général*, bloc **Scénarios liés** > *Pilotés par ce groupe*, avec la commande et l'action :
 
-![Scénarios liés au groupe Alarme](../images/Groupe.Scenarios.png)
+![Scénarios liés au groupe Alarme](images/linked-scenarios.png)
 
 ### Organiser les commandes
 
@@ -125,9 +125,9 @@ Les scénarios lancés, arrêtés, activés ou désactivés par une commande act
 - <i class="fas fa-clone"></i> **Cloner une commande** : duplique la commande entière, nommée « … (copie) ».
 - <i class="fas fa-cog"></i> **Configuration** : ouvre la configuration Jeedom de la commande (historique, type générique, alertes), une fois le groupe enregistré.
 
-![En-tête d'une commande pliée avec sa valeur](../images/Correspondances.Entete.png)
+![En-tête d'une commande pliée avec sa valeur](images/header.png)
 
-![Configuration d'une commande](../images/Commande.Configuration.png)
+![Configuration d'une commande](images/cmd-configuration.png)
 
 Une ligne dont l'équipement, la commande ou le scénario a été supprimé est signalée **en rouge**. L'enregistrement est refusé tant qu'une ligne est incomplète, avec un message qui indique la commande et la ligne à corriger.
 
@@ -147,7 +147,7 @@ Widget
 
 Chaque groupe a son propre widget :
 
-![Widgets](../images/Widget.png)
+![Widgets](images/widget.png)
 
 - une ligne par commande info, avec une pastille verte ou rouge selon la règle (bleue pour un calcul numérique), le nombre d'équipements conformes (ex. `2/2`) ou de valeurs, et la valeur de la commande avec son unité (ex. `18.9 °C`) ; l'icône <i class="fas fa-exclamation-triangle"></i> signale des équipements ignorés faute de mise à jour récente (survolez-la pour la liste) ;
 - la **couleur actuelle** de chaque lumière du groupe (lue sur l'info d'état de sa commande couleur, ou sur une info de type générique *Couleur lumière*) ;

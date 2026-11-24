@@ -13,7 +13,7 @@ Groupir permette di **raggruppare dispositivi** (e scenari). Ogni gruppo, ad ese
 
 Questi comandi si usano come qualsiasi comando Jeedom: scenari, widget, cronologia, avvisi...
 
-![Elenco dei gruppi](../images/Groupes.png)
+![Elenco dei gruppi](images/groups.png)
 
 Configurazione del plugin
 ===
@@ -22,7 +22,7 @@ Dopo l'installazione dal Market, attiva il plugin. **Non è necessaria alcuna co
 
 La funzione **cron** è attiva: ogni minuto, il plugin ricalcola i gruppi i cui comandi info dipendono dallo stato di uno scenario o verificano l'aggiornamento dei dati. Il livello di log *Debug* descrive ogni ricalcolo e ogni azione eseguita, il che aiuta nella diagnosi.
 
-![Configurazione del plugin](../images/Configuration.png)
+![Configurazione del plugin](images/configuration.png)
 
 L'interfaccia è disponibile in francese, inglese, tedesco, spagnolo e italiano.
 
@@ -43,7 +43,7 @@ Il blocco **Scenari collegati** elenca:
 
 Un clic apre lo scenario.
 
-![Scheda Generale](../images/Groupe.General.png)
+![Scheda Generale](images/general.png)
 
 Scheda «Corrispondenze»
 ---
@@ -53,19 +53,19 @@ Il gruppo contiene dei **comandi**, ognuno dei quali è un sottogruppo di dispos
 - **Comando info** (etichetta blu): calcola uno stato a partire dai dispositivi;
 - **Comando azione** (etichetta arancione): esegue azioni sui dispositivi.
 
-![Scheda Corrispondenze](../images/Correspondances.png)
+![Scheda Corrispondenze](images/mappings.png)
 
 Assegnate un **nome** al comando: sarà il nome del comando del gruppo. Aggiungete poi una riga per dispositivo con il pulsante **Dispositivo** (o per scenario con il pulsante **Scenario**). Ogni riga si compila da sinistra a destra: **Oggetto**, **Dispositivo**, **Comando**. Ogni elenco ha un campo *Filtro*; un filtro che lascia un solo risultato lo seleziona automaticamente, e in un comando azione, un dispositivo già presente non viene più proposto. In un comando info, lo stesso dispositivo può comparire su più righe (es. temperatura e umidità della stessa sonda), ma un comando info già scelto non viene più proposto.
 
 Il pulsante **interruttore** nell'intestazione attiva o disattiva un comando senza eliminarlo. Un comando disattivato non viene più calcolato né mostrato nel widget, e un comando azione disattivato non esegue più nulla. Il suo comando Jeedom viene conservato (cronologia, scenari che lo usano) e un comando info mantiene il suo ultimo valore.
 
-![Comandi disattivati](../images/Correspondances.Desactivee.png)
+![Comandi disattivati](images/disabled.png)
 
 ### Comando info
 
 Per ogni dispositivo: il comando info, una condizione (*uguale a*, *diverso da*, *maggiore di*, *contiene*...) e il **valore atteso** (il valore attuale è mostrato come suggerimento).
 
-![Comando info](../images/Correspondances.Info.png)
+![Comando info](images/info.png)
 
 Il **tipo** del comando si sceglie come in Jeedom, e le opzioni proposte dipendono da esso:
 
@@ -86,7 +86,7 @@ La regola (Binario, Altro e Numerico «secondo la regola»):
 
 **Verifica l'aggiornamento dei dati** (opzione di ogni comando info, disattivata per impostazione predefinita): una riga il cui dispositivo non è stato aggiornato entro il ritardo scelto (60 minuti per impostazione predefinita), o che Jeedom segnala in timeout, viene **ignorata**: non conta né nella regola né nel calcolo. Esempio: una sonda di temperatura senza batteria non falsa più la media. L'ultimo aggiornamento considerato è il più recente tra l'ultima comunicazione del dispositivo e la data del valore. Il widget mostra allora un **avviso** (passate il mouse sopra per l'elenco dei dispositivi in guasto), e il guasto e il ritorno alla normalità sono annotati nel log del plugin. Questa verifica viene ripetuta ogni minuto.
 
-![Comando numerico (media) con verifica dell'aggiornamento dei dati](../images/Correspondances.Info.Numerique.png)
+![Comando numerico (media) con verifica dell'aggiornamento dei dati](images/info-numeric.png)
 
 ### Comando azione
 
@@ -96,7 +96,7 @@ Il campo **Valore** si adatta al tipo di comando: numero (con l'intervallo conse
 
 La **pausa tra due azioni** (da 0 a 30 secondi) distanzia ogni azione: utile per le lampadine che ignorano un colore inviato subito dopo l'accensione.
 
-![Comando azione](../images/Correspondances.Action.png)
+![Comando azione](images/action.png)
 
 ### Aggiungere scenari
 
@@ -111,11 +111,11 @@ Esempio, un gruppo **Allarme**:
 - comando info `etat` (tipo *Altro*, valori `on` / `off`): una riga scenario *0 - Alarme - Activation* **è attivo**; vale `on` finché lo scenario è attivato;
 - comando azione `activation`: una riga scenario *0 - Alarme - Activation* **Avvia**, poi una riga dispositivo (*Google Home Parle*) che annuncia «Alarme activée»; scenari e dispositivi si susseguono nell'ordine dell'elenco.
 
-![Gruppo Allarme: scenario in un comando info e in un comando azione](../images/Correspondances.Scenarios.png)
+![Gruppo Allarme: scenario in un comando info e in un comando azione](images/scenarios.png)
 
 Gli scenari avviati, fermati, attivati o disattivati da un comando azione compaiono nella scheda *Generale*, blocco **Scenari collegati** > *Controllati da questo gruppo*, con il comando e l'azione:
 
-![Scenari collegati al gruppo Allarme](../images/Groupe.Scenarios.png)
+![Scenari collegati al gruppo Allarme](images/linked-scenarios.png)
 
 ### Organizzare i comandi
 
@@ -125,9 +125,9 @@ Gli scenari avviati, fermati, attivati o disattivati da un comando azione compai
 - <i class="fas fa-clone"></i> **Clona un comando**: duplica l'intero comando, con il nome «… (copie)».
 - <i class="fas fa-cog"></i> **Configurazione**: apre la configurazione Jeedom del comando (cronologia, tipo generico, avvisi), dopo aver salvato il gruppo.
 
-![Intestazione di un comando compresso con il suo valore](../images/Correspondances.Entete.png)
+![Intestazione di un comando compresso con il suo valore](images/header.png)
 
-![Configurazione di un comando](../images/Commande.Configuration.png)
+![Configurazione di un comando](images/cmd-configuration.png)
 
 Una riga il cui dispositivo, comando o scenario è stato eliminato è mostrata **in rosso**. Il salvataggio è rifiutato finché una riga è incompleta, con un messaggio che indica il comando e la riga da correggere.
 
@@ -147,7 +147,7 @@ Widget
 
 Ogni gruppo ha il proprio widget:
 
-![Widget](../images/Widget.png)
+![Widget](images/widget.png)
 
 - una riga per comando info, con un pallino verde o rosso secondo la regola (blu per un calcolo numerico), il numero di dispositivi conformi (es. `2/2`) o di valori, e il valore del comando con la sua unità (es. `18.9 °C`); l'icona <i class="fas fa-exclamation-triangle"></i> segnala i dispositivi ignorati per mancanza di aggiornamenti recenti (passate il mouse sopra per l'elenco);
 - il **colore attuale** di ogni luce del gruppo (letto dall'info di stato del suo comando colore, o da un'info di tipo generico *Colore luce*);

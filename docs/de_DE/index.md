@@ -13,7 +13,7 @@ Mit Groupir lassen sich **Geräte gruppieren** (und Szenarien). Jede Gruppe, zum
 
 Diese Befehle funktionieren wie jeder andere Jeedom-Befehl: Szenarien, Widgets, Verlauf, Warnungen...
 
-![Liste der Gruppen](../images/Groupes.png)
+![Liste der Gruppen](images/groups.png)
 
 Plugin-Konfiguration
 ===
@@ -22,7 +22,7 @@ Aktivieren Sie das Plugin nach der Installation aus dem Market. **Es ist keine g
 
 Die Funktion **cron** ist aktiv: Jede Minute berechnet das Plugin die Gruppen neu, deren Infobefehle vom Zustand eines Szenarios abhängen oder die Aktualität der Daten prüfen. Die Log-Stufe *Debug* beschreibt jede Neuberechnung und jede ausgeführte Aktion, was bei der Fehlersuche hilft.
 
-![Plugin-Konfiguration](../images/Configuration.png)
+![Plugin-Konfiguration](images/configuration.png)
 
 Die Oberfläche ist auf Französisch, Englisch, Deutsch, Spanisch und Italienisch verfügbar.
 
@@ -43,7 +43,7 @@ Der Block **Verknüpfte Szenarien** listet:
 
 Ein Klick öffnet das Szenario.
 
-![Reiter Allgemein](../images/Groupe.General.png)
+![Reiter Allgemein](images/general.png)
 
 Reiter „Zuordnungen"
 ---
@@ -53,19 +53,19 @@ Die Gruppe enthält **Befehle**, von denen jeder eine Untergruppe von Geräten i
 - **Info-Befehl** (blaues Abzeichen): berechnet einen Zustand aus den Geräten;
 - **Aktionsbefehl** (oranges Abzeichen): führt Aktionen auf den Geräten aus.
 
-![Reiter Zuordnungen](../images/Correspondances.png)
+![Reiter Zuordnungen](images/mappings.png)
 
 Geben Sie dem Befehl einen **Namen**: Er wird zum Namen des Gruppenbefehls. Fügen Sie dann mit der Schaltfläche **Gerät** eine Zeile pro Gerät hinzu (oder mit der Schaltfläche **Szenario** eine Zeile pro Szenario). Jede Zeile wird von links nach rechts ausgefüllt: **Objekt**, **Gerät**, **Befehl**. Jede Liste hat ein Feld *Filter*; ein Filter, der nur ein Ergebnis übrig lässt, wählt es automatisch aus, und in einem Aktionsbefehl wird ein bereits verwendetes Gerät nicht mehr angeboten. In einem Infobefehl kann dasselbe Gerät in mehreren Zeilen vorkommen (z. B. Temperatur und Luftfeuchtigkeit desselben Sensors), ein bereits gewählter Infobefehl wird jedoch nicht mehr angeboten.
 
 Der **Schalter** in der Kopfzeile aktiviert oder deaktiviert einen Befehl, ohne ihn zu löschen. Ein deaktivierter Befehl wird nicht mehr berechnet und nicht mehr im Widget angezeigt, und ein deaktivierter Aktionsbefehl führt nichts mehr aus. Sein Jeedom-Befehl bleibt erhalten (Historie, Szenarien, die ihn verwenden), und ein Infobefehl behält seinen letzten Wert.
 
-![Deaktivierte Befehle](../images/Correspondances.Desactivee.png)
+![Deaktivierte Befehle](images/disabled.png)
 
 ### Info-Befehl
 
 Für jedes Gerät: der Info-Befehl, eine Bedingung (*gleich*, *ungleich*, *größer als*, *enthält*...) und der **erwartete Wert** (der aktuelle Wert wird als Hinweis angezeigt).
 
-![Info-Befehl](../images/Correspondances.Info.png)
+![Info-Befehl](images/info.png)
 
 Der **Typ** des Befehls wird wie in Jeedom gewählt, und die angebotenen Optionen hängen davon ab:
 
@@ -86,7 +86,7 @@ Die Regel (Binär, Andere und Numerisch „gemäß der Regel“):
 
 **Aktualität der Daten prüfen** (Option jedes Infobefehls, standardmäßig deaktiviert): eine Zeile, deren Gerät innerhalb der gewählten Frist (standardmäßig 60 Minuten) nicht aktualisiert wurde oder die Jeedom als Timeout meldet, wird **ignoriert**: sie zählt weder in der Regel noch in der Berechnung. Beispiel: ein Temperatursensor mit leerer Batterie verfälscht den Durchschnitt nicht mehr. Als letzte Aktualisierung gilt die jüngste aus letzter Kommunikation des Geräts und Datum des Werts. Das Widget zeigt dann eine **Warnung** an (mit der Maus darüberfahren für die Liste der ausgefallenen Geräte), Ausfall und Wiederherstellung werden im Plugin-Log vermerkt. Diese Prüfung erfolgt jede Minute.
 
-![Numerischer Befehl (Durchschnitt) mit Prüfung der Datenaktualität](../images/Correspondances.Info.Numerique.png)
+![Numerischer Befehl (Durchschnitt) mit Prüfung der Datenaktualität](images/info-numeric.png)
 
 ### Aktionsbefehl
 
@@ -96,7 +96,7 @@ Das Feld **Wert** passt sich dem Befehlstyp an: Zahl (mit dem erlaubten Bereich 
 
 Die **Pause zwischen zwei Aktionen** (0 bis 30 Sekunden) verteilt die Aktionen zeitlich: nützlich für Lampen, die eine direkt nach dem Einschalten gesendete Farbe ignorieren.
 
-![Aktionsbefehl](../images/Correspondances.Action.png)
+![Aktionsbefehl](images/action.png)
 
 ### Szenarien hinzufügen
 
@@ -111,11 +111,11 @@ Beispiel, eine Gruppe **Alarm**:
 - Infobefehl `etat` (Typ *Andere*, Werte `on` / `off`): eine Szenario-Zeile *0 - Alarme - Activation* **ist aktiv**; sie ist `on`, solange das Szenario aktiviert ist;
 - Aktionsbefehl `activation`: eine Szenario-Zeile *0 - Alarme - Activation* **Starten**, dann eine Gerätezeile (*Google Home Parle*), die „Alarme activée“ ansagt; Szenarien und Geräte werden in der Reihenfolge der Liste ausgeführt.
 
-![Gruppe Alarm: Szenario in einem Infobefehl und in einem Aktionsbefehl](../images/Correspondances.Scenarios.png)
+![Gruppe Alarm: Szenario in einem Infobefehl und in einem Aktionsbefehl](images/scenarios.png)
 
 Szenarien, die von einem Aktionsbefehl gestartet, gestoppt, aktiviert oder deaktiviert werden, erscheinen im Reiter *Allgemein*, Block **Verknüpfte Szenarien** > *Von dieser Gruppe gesteuert*, mit Befehl und Aktion:
 
-![Mit der Gruppe Alarm verknüpfte Szenarien](../images/Groupe.Scenarios.png)
+![Mit der Gruppe Alarm verknüpfte Szenarien](images/linked-scenarios.png)
 
 ### Befehle organisieren
 
@@ -125,9 +125,9 @@ Szenarien, die von einem Aktionsbefehl gestartet, gestoppt, aktiviert oder deakt
 - <i class="fas fa-clone"></i> **Befehl klonen**: dupliziert den gesamten Befehl unter dem Namen „… (copie)".
 - <i class="fas fa-cog"></i> **Konfiguration**: öffnet die Jeedom-Konfiguration des Befehls (Verlauf, generischer Typ, Warnungen), sobald die Gruppe gespeichert ist.
 
-![Kopfzeile eines eingeklappten Befehls mit seinem Wert](../images/Correspondances.Entete.png)
+![Kopfzeile eines eingeklappten Befehls mit seinem Wert](images/header.png)
 
-![Konfiguration eines Befehls](../images/Commande.Configuration.png)
+![Konfiguration eines Befehls](images/cmd-configuration.png)
 
 Eine Zeile, deren Gerät, Befehl oder Szenario gelöscht wurde, wird **rot** angezeigt. Das Speichern wird abgelehnt, solange eine Zeile unvollständig ist; eine Meldung nennt den Befehl und die zu korrigierende Zeile.
 
@@ -147,7 +147,7 @@ Widget
 
 Jede Gruppe hat ihr eigenes Widget:
 
-![Widgets](../images/Widget.png)
+![Widgets](images/widget.png)
 
 - eine Zeile pro Info-Befehl mit einem grünen oder roten Punkt gemäß der Regel (blau bei einer numerischen Berechnung), der Anzahl übereinstimmender Geräte (z. B. `2/2`) oder Werte und dem Wert des Befehls mit seiner Einheit (z. B. `18.9 °C`); das Symbol <i class="fas fa-exclamation-triangle"></i> weist auf Geräte hin, die mangels aktueller Aktualisierung ignoriert werden (mit der Maus darüberfahren für die Liste);
 - die **aktuelle Farbe** jedes Lichts der Gruppe (aus der Status-Info seines Farbbefehls gelesen oder aus einer Info mit dem generischen Typ *Lichtfarbe*);

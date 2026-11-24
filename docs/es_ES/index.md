@@ -13,7 +13,7 @@ Groupir permite **agrupar equipos** (y escenarios). Cada grupo, por ejemplo «Lu
 
 Estos comandos se usan como cualquier comando de Jeedom: escenarios, widgets, historial, alertas...
 
-![Lista de grupos](../images/Groupes.png)
+![Lista de grupos](images/groups.png)
 
 Configuración del plugin
 ===
@@ -22,7 +22,7 @@ Tras instalarlo desde el Market, active el plugin. **No se necesita ninguna conf
 
 La función **cron** está activa: cada minuto, el plugin recalcula los grupos cuyos comandos info dependen del estado de un escenario o comprueban la actualidad de los datos. El nivel de log *Debug* detalla cada recálculo y cada acción ejecutada, lo que ayuda al diagnóstico.
 
-![Configuración del plugin](../images/Configuration.png)
+![Configuración del plugin](images/configuration.png)
 
 La interfaz está disponible en francés, inglés, alemán, español e italiano.
 
@@ -43,7 +43,7 @@ El bloque **Escenarios vinculados** muestra:
 
 Un clic abre el escenario.
 
-![Pestaña General](../images/Groupe.General.png)
+![Pestaña General](images/general.png)
 
 Pestaña «Correspondencias»
 ---
@@ -53,19 +53,19 @@ El grupo contiene **comandos**, cada uno de ellos un subgrupo de equipos:
 - **Comando info** (etiqueta azul): calcula un estado a partir de los equipos;
 - **Comando acción** (etiqueta naranja): ejecuta acciones sobre los equipos.
 
-![Pestaña Correspondencias](../images/Correspondances.png)
+![Pestaña Correspondencias](images/mappings.png)
 
 Asigne un **nombre** al comando: será el nombre del comando del grupo. Después añada una línea por equipo con el botón **Equipo** (o por escenario con el botón **Escenario**). Cada línea se rellena de izquierda a derecha: **Objeto**, **Equipo**, **Comando**. Cada lista tiene un campo *Filtro*; un filtro que deja un solo resultado lo selecciona automáticamente, y en un comando acción, un equipo ya presente deja de proponerse. En un comando info, un mismo equipo puede aparecer en varias líneas (p. ej. temperatura y humedad de una misma sonda), pero un comando info ya elegido deja de proponerse.
 
 El botón **interruptor** del encabezado activa o desactiva un comando sin eliminarlo. Un comando desactivado ya no se calcula ni se muestra en el widget, y un comando acción desactivado ya no ejecuta nada. Su comando Jeedom se conserva (historial, escenarios que lo usan) y un comando info conserva su último valor.
 
-![Comandos desactivados](../images/Correspondances.Desactivee.png)
+![Comandos desactivados](images/disabled.png)
 
 ### Comando info
 
 Para cada equipo: el comando info, una condición (*igual a*, *distinto de*, *mayor que*, *contiene*...) y el **valor esperado** (el valor actual se muestra como indicación).
 
-![Comando info](../images/Correspondances.Info.png)
+![Comando info](images/info.png)
 
 El **tipo** del comando se elige como en Jeedom, y las opciones propuestas dependen de él:
 
@@ -86,7 +86,7 @@ La regla (Binario, Otro y Numérico «según la regla»):
 
 **Comprobar la actualidad de los datos** (opción de cada comando info, desactivada por defecto): una línea cuyo equipo no se ha actualizado en el plazo elegido (60 minutos por defecto), o que Jeedom indica en timeout, se **ignora**: no cuenta ni en la regla ni en el cálculo. Ejemplo: una sonda de temperatura sin pila ya no falsea la media. La última actualización usada es la más reciente entre la última comunicación del equipo y la fecha del valor. El widget muestra entonces una **advertencia** (pase el ratón por encima para ver la lista de equipos en fallo), y el fallo y la recuperación se anotan en el log del plugin. Esta comprobación se repite cada minuto.
 
-![Comando numérico (media) con comprobación de la actualidad de los datos](../images/Correspondances.Info.Numerique.png)
+![Comando numérico (media) con comprobación de la actualidad de los datos](images/info-numeric.png)
 
 ### Comando acción
 
@@ -96,7 +96,7 @@ El campo **Valor** se adapta al tipo de comando: número (con el rango permitido
 
 La **pausa entre dos acciones** (de 0 a 30 segundos) espacia cada acción: útil para las bombillas que ignoran un color enviado justo después de encenderse.
 
-![Comando acción](../images/Correspondances.Action.png)
+![Comando acción](images/action.png)
 
 ### Añadir escenarios
 
@@ -111,11 +111,11 @@ Ejemplo, un grupo **Alarma**:
 - comando info `etat` (tipo *Otro*, valores `on` / `off`): una línea escenario *0 - Alarme - Activation* **está activo**; vale `on` mientras el escenario esté activado;
 - comando acción `activation`: una línea escenario *0 - Alarme - Activation* **Lanzar**, y luego una línea equipo (*Google Home Parle*) que anuncia «Alarme activée»; escenarios y equipos se encadenan en el orden de la lista.
 
-![Grupo Alarma: escenario en un comando info y en un comando acción](../images/Correspondances.Scenarios.png)
+![Grupo Alarma: escenario en un comando info y en un comando acción](images/scenarios.png)
 
 Los escenarios iniciados, detenidos, activados o desactivados por un comando acción aparecen en la pestaña *General*, bloque **Escenarios vinculados** > *Controlados por este grupo*, con el comando y la acción:
 
-![Escenarios vinculados al grupo Alarma](../images/Groupe.Scenarios.png)
+![Escenarios vinculados al grupo Alarma](images/linked-scenarios.png)
 
 ### Organizar los comandos
 
@@ -125,9 +125,9 @@ Los escenarios iniciados, detenidos, activados o desactivados por un comando acc
 - <i class="fas fa-clone"></i> **Clonar un comando**: duplica el comando completo, con el nombre «… (copie)».
 - <i class="fas fa-cog"></i> **Configuración**: abre la configuración Jeedom del comando (historial, tipo genérico, alertas), una vez guardado el grupo.
 
-![Encabezado de un comando plegado con su valor](../images/Correspondances.Entete.png)
+![Encabezado de un comando plegado con su valor](images/header.png)
 
-![Configuración de un comando](../images/Commande.Configuration.png)
+![Configuración de un comando](images/cmd-configuration.png)
 
 Una línea cuyo equipo, comando o escenario se ha eliminado se muestra **en rojo**. No se puede guardar mientras haya una línea incompleta; un mensaje indica el comando y la línea que hay que corregir.
 
@@ -147,7 +147,7 @@ Widget
 
 Cada grupo tiene su propio widget:
 
-![Widgets](../images/Widget.png)
+![Widgets](images/widget.png)
 
 - una línea por comando info, con un punto verde o rojo según la regla (azul para un cálculo numérico), el número de equipos conformes (p. ej. `2/2`) o de valores, y el valor del comando con su unidad (p. ej. `18.9 °C`); el icono <i class="fas fa-exclamation-triangle"></i> señala equipos ignorados por falta de actualización reciente (pase el ratón por encima para ver la lista);
 - el **color actual** de cada luz del grupo (leído en la info de estado de su comando de color, o en una info de tipo genérico *Color de luz*);
